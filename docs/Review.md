@@ -151,3 +151,9 @@ The extractor no longer assumes every AcroForm is the December 2025 layout. Stru
 ### P0.2 — Flattened coordinate extraction
 
 The former flattened-PDF failure path now has a real profile-driven implementation. A generated flattened A/B/C fixture is parsed through `pdfplumber` cell crops and compared against the same expected JSON used by the AcroForm fixture, while unknown layouts remain fail-closed.
+
+### P0.3 — OCR pipeline
+
+The image-only path now renders PDFs with Poppler, recognizes tokens/confidence with Tesseract, maps recognized words into versioned coordinate cells, and sends the recovered numbers through the same canonical arithmetic checks. The regression fixture validates financial values exactly while documenting that OCR address text can require human review.
+
+The image-only OCR fixture is re-embedded with ReportLab invariant mode rather than PIL PDF output, eliminating timestamp metadata and making the scanned regression PDF byte-reproducible across runs.

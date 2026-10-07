@@ -476,3 +476,9 @@ Run `./scripts/verify_p0_01_profiles.sh`. The gate proves that the supplied IRS 
 ## P0.2 — Flattened coordinate extraction verification
 
 Run `./scripts/verify_p0_02_flattened.sh`. It regenerates the flattened A/B/C fixture, extracts it through coordinate profiles, compares the result exactly with `f8825_multi_ABC_expected.json`, and proves that the existing AcroForm fixture still matches the same oracle.
+
+## P0.3 — OCR verification
+
+Run `./scripts/verify_p0_03_ocr.sh` after installing `requirements-ocr.txt`, Tesseract, and Poppler. The script generates an image-only scanned fixture from the deterministic flattened PDF, proves that the text-layer probe sees no native text, runs the OCR path, and compares every income, expense, and total value against the A/B/C expected JSON.
+
+The scanned fixture generator also runs in ReportLab invariant mode after rasterization; the P0.3 verifier compares two generated SHA-256 values before OCR so the committed image-only evidence remains byte-reproducible.

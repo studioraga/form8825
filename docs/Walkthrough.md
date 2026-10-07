@@ -95,3 +95,7 @@ For production evolution, point to `src/form8825/profiles.py`: the field map is 
 ### Enhancement: flattened text support
 
 Show `src/form8825/flattened.py` and explain that flattened documents are accepted only when a revision-specific coordinate profile is recognized. The same expected JSON and arithmetic checks validate both AcroForm and flattened extraction, avoiding a second business-logic path.
+
+### Enhancement: scanned-PDF OCR
+
+Demonstrate the distinction between native text and OCR: `usable_text_layer()` fails for the image-only fixture, `allow_ocr=True` activates Tesseract/Poppler, and the recovered financial values are still accepted only after the existing arithmetic invariants pass. Call out OCR confidence and address review as the next production control.

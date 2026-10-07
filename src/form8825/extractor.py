@@ -11,6 +11,7 @@ from pypdf import PdfReader
 
 from .profiles import FORM_8825_2025_12, FormProfile, detect_profile
 from .flattened import detect_flattened_profile, parse_flattened
+from .ocr import OCRDependencyError, parse_scanned
 
 PROPERTY_NAMES = ["A", "B", "C", "D"]
 INCOME_KEYS = {"2a": "gross_rents", "2b": "other_income"}
@@ -213,22 +214,25 @@ def extract_8825(pdf_path: str | Path, *, validate: bool = True, allow_ocr: bool
         usable, diagnostics = usable_text_layer(pdf_path)
         if not usable:
             if allow_ocr:
+                try:
+                    props = parse_scanned(pdf_path, parse_money)
+                except OCRDependencyError as exc:
+                    raise ExtractionError(f"OCR extraction unavailable: {exc}. Diagnostics: {diagnostics}") from exc
+                if not props:
+                    raise ExtractionError(f"OCR produced no supported Form 8825 values. Diagnostics: {diagnostics}")
+            else:
                 raise ExtractionError(
-                    "No usable text/form layer. OCR hook requested, but OCR is optional in this submission; "
-                    "install Tesseract + pdf2image and route OCR words through the same coordinate mapping. "
+                    "No usable AcroForm values and no usable text layer. Likely scanned/image-only input. "
                     f"Diagnostics: {diagnostics}"
                 )
-            raise ExtractionError(
-                "No usable AcroForm values and no usable text layer. Likely scanned/image-only input. "
-                f"Diagnostics: {diagnostics}"
-            )
-        flat_profile = detect_flattened_profile(pdf_path)
-        if flat_profile is None:
-            raise ExtractionError(
-                "Text layer exists but no supported Form 8825 flattened layout profile was found. "
-                "Add a versioned coordinate profile and regression fixture before accepting this layout."
-            )
-        props = parse_flattened(pdf_path, flat_profile, parse_money)
+        else:
+            flat_profile = detect_flattened_profile(pdf_path)
+            if flat_profile is None:
+                raise ExtractionError(
+                    "Text layer exists but no supported Form 8825 flattened layout profile was found. "
+                    "Add a versioned coordinate profile and regression fixture before accepting this layout."
+                )
+            props = parse_flattened(pdf_path, flat_profile, parse_money)
 
     if validate:
         all_errors = {p["property_name"]: validate_property(p) for p in props}

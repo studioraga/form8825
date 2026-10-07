@@ -80,3 +80,9 @@ An AcroForm can be readable while still being unsafe to interpret with the wrong
 ## Flattened text PDFs
 
 Flattened text is now supported only when `detect_flattened_profile()` recognizes a calibrated coordinate profile. The parser crops profile-defined address and line cells with `pdfplumber`, then uses the same canonical validation rules as AcroForm extraction. A text-bearing PDF with no recognized coordinate profile is rejected rather than guessed.
+
+## Scanned/image-only PDFs
+
+The optional OCR path is now implemented for supported profiles. Install `requirements-ocr.txt`, Tesseract, and Poppler. `extract_8825(..., allow_ocr=True)` renders the page, recognizes words/confidence, maps words into profile-defined cells, and validates the resulting financial values. OCR addresses may contain recognition noise, so production use should persist confidence and route uncertain text to human review; financial acceptance still depends on line 2c/18/19 reconciliation.
+
+The committed image-only regression fixture is generated deterministically: the flattened fixture is rasterized, then the raster is embedded into a ReportLab `invariant=1` PDF. This keeps OCR evidence reproducible even though the content has no native text layer.

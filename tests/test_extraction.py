@@ -160,3 +160,32 @@ def test_flattened_multi_property_fixture_matches_expected_json():
     actual = extract_8825(ROOT / "data/f8825_multi_ABC_flattened.pdf")
     expected = json.loads((ROOT / "data/f8825_multi_ABC_expected.json").read_text())
     assert actual == expected
+
+
+def test_scanned_fixture_ocr_recovers_financial_values():
+    pytest.importorskip("pytesseract")
+    pytest.importorskip("pdf2image")
+    scanned = ROOT / "data/f8825_multi_ABC_scanned.pdf"
+    if not scanned.exists():
+        pytest.skip("scanned fixture not generated")
+    actual = extract_8825(scanned, allow_ocr=True)
+    expected = json.loads((ROOT / "data/f8825_multi_ABC_expected.json").read_text())
+    assert [p["property_name"] for p in actual] == ["A", "B", "C"]
+    for got, want in zip(actual, expected):
+        assert got["income_line_items"] == want["income_line_items"]
+        assert got["expense_line_items"] == want["expense_line_items"]
+        assert got["totals"] == want["totals"]
+        assert got["property_address"]
+
+
+def test_scanned_fixture_is_reproducible():
+    import hashlib
+    import subprocess
+
+    script = ROOT / "scripts/generate_scanned_fixture.py"
+    pdf = ROOT / "data/f8825_multi_ABC_scanned.pdf"
+    subprocess.run([sys.executable, str(script)], check=True)
+    first = hashlib.sha256(pdf.read_bytes()).hexdigest()
+    subprocess.run([sys.executable, str(script)], check=True)
+    second = hashlib.sha256(pdf.read_bytes()).hexdigest()
+    assert first == second

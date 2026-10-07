@@ -185,3 +185,7 @@ Before accepting another IRS revision, add a `FormProfile` in `src/form8825/prof
 ## P0.2 validation — flattened PDFs
 
 Calibrate a new flattened form by adding a versioned `FlatLayoutProfile` with measured cell boxes and a representative fixture. Run `./scripts/verify_p0_02_flattened.sh` before enabling the profile. Never infer arbitrary table geometry from a filename alone.
+
+## P0.3 validation — scanned input
+
+Install optional OCR dependencies with `pip install -r requirements-ocr.txt`; install system `tesseract` and Poppler (`pdftoppm`). Then run `./scripts/verify_p0_03_ocr.sh`. Keep OCR opt-in in production and add confidence/review policy before using OCR text as authoritative filing data.

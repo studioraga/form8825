@@ -453,3 +453,7 @@ Form-layout knowledge is isolated in `src/form8825/profiles.py`. Extraction firs
 ## 12. Flattened text-coordinate extraction
 
 Flattened PDFs with a supported layout profile are handled by `src/form8825/flattened.py`. The profile defines page-specific address and line-value bounding boxes in PDF coordinates. `pdfplumber` crops each cell, extracts text, normalizes money, and feeds the same canonical schema and arithmetic validation layer used by AcroForms. The generated `data/f8825_multi_ABC_flattened.pdf` is the regression fixture for this path. Unknown flattened layouts continue to fail closed.
+
+## 13. Scanned-PDF OCR pipeline
+
+When no usable AcroForm or text layer exists and `allow_ocr=True`, the extractor renders the first page with Poppler (`pdf2image`), uses Tesseract to recognize words and confidence values, recognizes a supported OCR layout profile, maps token centers into the same versioned cell boxes used by flattened extraction, and then feeds the canonical schema/arithmetic validator. OCR remains opt-in because it has external system dependencies and recognition uncertainty.
