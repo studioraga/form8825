@@ -13,57 +13,98 @@ The architecture is intentionally deterministic. AI may accelerate implementatio
 
 ## 2. End-to-end architecture
 
-```text
- +-------------------------+
- | Form 8825 PDF |
- +------------+------------+
- |
- +------------v------------+
- | PDF preflight / parsing |
- | pypdf + pdfplumber |
- +------------+------------+
- |
- +---------------------+---------------------+
- | |
- +---------v----------+ +---------v----------+
- | AcroForm values | | text-layer probe |
- | preferred path | | usable / unusable |
- +---------+----------+ +---------+----------+
- | |
- | no fields|
- | v
- | +-------------------+
- | | flattened / scan |
- | | OCR extension |
- | +-------------------+
- v
- +--------------------+
- | canonical property |
- | JSON representation|
- +---------+----------+
- |
- +---------v----------+
- | deterministic |
- | arithmetic checks |
- | 2c, 18, 19 |
- +---------+----------+
- |
- +---------v----------+
- | FastAPI service |
- +---------+----------+
- |
- +-------+-------+
- | |
-+-------v------+ +------v-------+
-| SQLite DB | | React review |
-| provenance | | and editing |
-| + audit | +------+-------+
-+------+------+ |
- ^ |
- +---------------+
- PATCH + server
- recalculation
+The complete solution separates document acquisition, deterministic extraction, financial validation, persistence/review, and independent verification.
+
+```mermaid
+flowchart TB
+
+    subgraph INPUT["Task 1 and Task 2: Document Input and Fixtures"]
+        direction LR
+        PDF["IRS Form 8825<br/>Supplied PDF"]
+        GEN["Fixture Generator<br/>ReportLab invariant mode"]
+        ABC["Synthetic A/B/C PDF"]
+        EXP["Expected JSON<br/>Single source of truth"]
+
+        GEN --> ABC
+        GEN --> EXP
+    end
+
+    subgraph EXTRACT["Task 1: Deterministic Extraction"]
+        direction TB
+        PRE["PDF Preflight and Parsing<br/>pypdf + pdfplumber"]
+        ACRO{"Supported AcroForm fields?"}
+        FIELD["Semantic Field Mapping<br/>Lines 2a-19, Properties A-D"]
+        TEXT{"Usable text layer?"}
+        FLAT["Flattened PDF<br/>Coordinate/layout adapter required"]
+        SCAN["Scanned/image PDF<br/>Optional OCR extension"]
+        CANON["Canonical Property JSON<br/>Whole-dollar integers"]
+        VALID{"Arithmetic valid?<br/>Lines 2c, 18, and 19"}
+        REJECT["Fail Closed<br/>Controlled extraction error"]
+
+        PRE --> ACRO
+        ACRO -->|Yes| FIELD
+        FIELD --> CANON
+        CANON --> VALID
+
+        ACRO -->|No| TEXT
+        TEXT -->|Yes| FLAT
+        FLAT --> REJECT
+        TEXT -->|No| SCAN
+        SCAN --> REJECT
+
+        VALID -->|No| REJECT
+    end
+
+    subgraph SERVICE["Task 3: Application and Persistence"]
+        direction LR
+        API["FastAPI Service<br/>Upload, Retrieve, PATCH, Audit"]
+        DB["SQLite / SQLAlchemy<br/>Documents, Properties, Line Values, Change Audit"]
+        UI["React Review UI<br/>Upload, Edit, Totals, Audit History"]
+
+        API -->|Persist and query| DB
+        DB -->|Stored state| API
+        UI -->|REST requests| API
+        API -->|JSON responses| UI
+    end
+
+    subgraph VERIFY["Task 4: Verification and Evidence"]
+        direction LR
+        JSON["Exact JSON Comparison<br/>Supplied PDF + A/B/C fixture"]
+        MATH["Financial Reconciliation<br/>2c = 2a + 2b<br/>18 = expense sum<br/>19 = 2c - 18"]
+        TEST["pytest + API/DB Tests<br/>Positive and negative paths"]
+        E2E["Vite Build + Playwright<br/>Upload, Edit, Audit, Reload"]
+        CSV["Validation Evidence CSV<br/>UTC, SHA-256, PASS/FAIL"]
+        GATE{"verify_all.sh<br/>All gates pass?"}
+
+        JSON --> GATE
+        MATH --> GATE
+        TEST --> GATE
+        E2E --> GATE
+        CSV --> GATE
+    end
+
+    PDF --> PRE
+    ABC --> PRE
+
+    VALID -->|Yes| API
+    VALID -->|Yes| JSON
+    VALID -->|Yes| MATH
+
+    EXP -.-> JSON
+    API -.-> TEST
+    DB -.-> TEST
+    UI -.-> E2E
+
+    JSON --> CSV
+    MATH --> CSV
+
+    GATE -->|Yes| PASS["Validated Git Baseline"]
+    GATE -->|No| FAIL["Reject Baseline<br/>Investigate Evidence"]
 ```
+
+**Architecture principle:** PDF acquisition and field interpretation are separated from canonical financial validation. FastAPI owns server-side recalculation and audit persistence, while React provides the human review surface. An independent verification pipeline checks extraction accuracy, financial invariants, database provenance, and browser behavior before the Git baseline is accepted.
+
+The flattened-text and scanned-PDF branches are intentionally represented as extension paths. The current baseline fails closed rather than silently accepting unsupported extraction paths.
 
 ## 3. Extraction hierarchy
 
@@ -84,38 +125,38 @@ Supported field layouts:
 
 The baseline intentionally fails closed if a PDF has no supported AcroForm structure. If substantial text exists, the error identifies the missing flattened-coordinate implementation. If substantial text does not exist, the error identifies likely scanned/image-only input.
 
-The optional scanned path is documented in `PDF-Failure-Modes.md` and uses page rendering + OCR + bounding boxes + confidence + version-specific cell geometry before feeding the same canonical validation layer.
+The optional scanned path is documented in [`PDF-Failure-Modes.md`](PDF-Failure-Modes.md) and uses page rendering + OCR + bounding boxes + confidence + version-specific cell geometry before feeding the same canonical validation layer.
 
 ## 4. Canonical property schema
 
 ```json
 {
- "property_name": "A",
- "property_address": "...",
- "income_line_items": {
- "gross_rents": 0,
- "other_income": 0
- },
- "expense_line_items": {
- "advertising": 0,
- "auto_travel": 0,
- "cleaning_maintenance": 0,
- "commissions": 0,
- "insurance": 0,
- "interest": 0,
- "legal_professional": 0,
- "real_estate_taxes": 0,
- "repairs": 0,
- "utilities": 0,
- "wages_salaries": 0,
- "depreciation": 0,
- "other_deductions": 0
- },
- "totals": {
- "total_rental_income": 0,
- "total_expenses": 0,
- "net_income": 0
- }
+  "property_name": "A",
+  "property_address": "...",
+  "income_line_items": {
+    "gross_rents": 0,
+    "other_income": 0
+  },
+  "expense_line_items": {
+    "advertising": 0,
+    "auto_travel": 0,
+    "cleaning_maintenance": 0,
+    "commissions": 0,
+    "insurance": 0,
+    "interest": 0,
+    "legal_professional": 0,
+    "real_estate_taxes": 0,
+    "repairs": 0,
+    "utilities": 0,
+    "wages_salaries": 0,
+    "depreciation": 0,
+    "other_deductions": 0
+  },
+  "totals": {
+    "total_rental_income": 0,
+    "total_expenses": 0,
+    "net_income": 0
+  }
 }
 ```
 
@@ -135,7 +176,7 @@ For the multi-property fixture:
 
 ```text
 Grand total net income = sum(property line 19 values)
- = 153,900
+                       = 153,900
 ```
 
 Extraction fails if a populated PDF does not reconcile.
@@ -156,7 +197,7 @@ Expected totals:
 | A | 125,000 | 89,000 | 36,000 |
 | B | 212,500 | 154,200 | 58,300 |
 | C | 182,500 | 122,900 | 59,600 |
-| Grand net | | | 153,900 |
+| Grand net |  |  | 153,900 |
 
 ## 7. API architecture
 
@@ -180,19 +221,182 @@ Key controls:
 - SQLAlchemy transactions roll back on persistence errors;
 - CORS is limited to the local Vite origins used by the demo.
 
-See `API.md`.
+See [`API.md`](API.md).
 
 ## 8. Database architecture
 
-```text
-documents 1 ---- * properties 1 ---- * line_values
- |
- +------------- * change_audit
+The persistence model separates uploaded-document identity, property identity, financial line values, calculated totals, provenance, and manual-edit audit history.
+
+```mermaid
+erDiagram
+    DOCUMENTS ||--o{ PROPERTIES : contains
+    PROPERTIES ||--o{ LINE_VALUES : has
+    PROPERTIES ||--o{ CHANGE_AUDIT : records
+
+    DOCUMENTS {
+        int id PK
+        string filename
+        string sha256
+        string extraction_status
+        datetime created_at
+    }
+
+    PROPERTIES {
+        int id PK
+        int document_id FK
+        string property_name
+        string property_address
+    }
+
+    LINE_VALUES {
+        int id PK
+        int property_id FK
+        string category
+        string key
+        int value
+        string source
+    }
+
+    CHANGE_AUDIT {
+        int id PK
+        int property_id FK
+        string category
+        string key
+        int old_value
+        int new_value
+        string reason
+        datetime changed_at
+    }
 ```
 
-`line_values.source` records provenance (`extracted`, `manual`, `calculated`). Database uniqueness constraints prevent duplicate properties per document and duplicate line keys per property/category. SQLite foreign-key enforcement is explicitly enabled.
+### Database relationship behavior
 
-See `Database.md`.
+```text
+documents
+    |
+    | 1 : many
+    v
+properties
+    |
+    +---- 1 : many ----> line_values
+    |
+    +---- 1 : many ----> change_audit
+```
+
+A document can therefore contain multiple Form 8825 properties:
+
+```text
+Document 1
+ |- Property A
+ |- Property B
+ `- Property C
+```
+
+Each property owns its financial values:
+
+```text
+Property A
+ |- income_line_items.gross_rents
+ |- income_line_items.other_income
+ |- expense_line_items.advertising
+ |- ...
+ |- totals.total_rental_income
+ |- totals.total_expenses
+ `- totals.net_income
+```
+
+and independently owns its edit history:
+
+```text
+Property A
+ `- gross_rents
+      120000
+         |
+         | manual correction
+         v
+      121000
+         |
+         +-- line_values.source = "manual"
+         |
+         `-- change_audit
+              old_value = 120000
+              new_value = 121000
+              reason    = ...
+```
+
+The corresponding totals are then recalculated by the backend:
+
+```text
+gross_rents 120000 -> 121000
+                 |
+                 v
+total_rental_income 125000 -> 126000
+total_expenses                89000
+net_income           36000 -> 37000
+```
+
+The updated calculated values have:
+
+```text
+line_values.source = "calculated"
+```
+
+rather than `manual`.
+
+### Provenance model
+
+`line_values.source` has three intended states:
+
+| Source | Meaning |
+|---|---|
+| `extracted` | Value came directly from the PDF extraction result |
+| `manual` | Reviewer changed a source financial value |
+| `calculated` | Backend recalculated the value from other source values |
+
+This makes the database distinguish:
+
+```text
+what the PDF said
+```
+
+from:
+
+```text
+what a reviewer corrected
+```
+
+and:
+
+```text
+what the application mathematically derived
+```
+
+### Integrity controls
+
+Database-level controls include:
+
+- foreign-key enforcement enabled explicitly for SQLite;
+- one property identity per document/property name;
+- one semantic line value per property/category/key;
+- audit records associated with the property being changed;
+- calculated totals protected from direct UI/API modification;
+- transaction rollback when persistence fails.
+
+The key uniqueness contracts are conceptually:
+
+```text
+UNIQUE(document_id, property_name)
+```
+
+and:
+
+```text
+UNIQUE(property_id, category, key)
+```
+
+These prevent duplicate property rows and duplicate financial semantic keys.
+
+See [`Database.md`](Database.md) for the persistence model and validation details.
 
 ## 9. React architecture
 
@@ -214,22 +418,30 @@ Validation is layered:
 
 ```text
 static/runtime preflight
- |
+        |
+        v
 fixture regeneration
- |
+        |
+        v
 extract real + synthetic PDFs
- |
+        |
+        v
 exact JSON comparison
- |
+        |
+        v
 pytest extraction/API/negative tests
- |
+        |
+        v
 CSV evidence generation
- |
+        |
+        v
 API + SQLite verification script
- |
+        |
+        v
 Vite production build
- |
+        |
+        v
 Playwright end-to-end UI test
 ```
 
-Use `scripts/verify_all.sh` for the final gate. Detailed commands and expected results are in `Validation.md`.
+Use `scripts/verify_all.sh` for the final gate. Detailed commands and expected results are in [`Validation.md`](Validation.md).
