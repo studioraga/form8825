@@ -3,12 +3,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import pdfplumber
 from pypdf import PdfReader
+
+from .profiles import FORM_8825_2025_12, FormProfile, detect_profile
 
 PROPERTY_NAMES = ["A", "B", "C", "D"]
 INCOME_KEYS = {"2a": "gross_rents", "2b": "other_income"}
@@ -29,13 +30,8 @@ EXPENSE_KEYS = {
 }
 TOTAL_KEYS = {"2c": "total_rental_income", "18": "total_expenses", "19": "net_income"}
 
-# IRS 12/2025 page-1 field-number pattern: four adjacent property columns per line.
-IRS_LINE_BASE = {
-    "2a": 23, "2b": 27, "2c": 31,
-    "3": 35, "4": 39, "5": 43, "6": 47, "7": 51, "8": 55,
-    "9": 59, "10": 63, "11": 67, "12": 71, "13": 75, "14": 79,
-    "15": 83, "16": 87, "17": 91, "18": 95, "19": 99,
-}
+IRS_LINE_BASE = FORM_8825_2025_12.line_base
+
 
 class ExtractionError(RuntimeError):
     pass
@@ -110,11 +106,11 @@ def _parse_canonical_fields(fields: dict[str, Any]) -> list[dict[str, Any]]:
     return [props[p] for p in PROPERTY_NAMES if p in props and (props[p]["property_address"] or any(props[p]["totals"].values()) or any(props[p]["income_line_items"].values()) or any(props[p]["expense_line_items"].values()))]
 
 
-def _property_from_irs_field(line: str, field_name: str, known_addresses: list[str]) -> str:
+def _property_from_irs_field(line: str, field_name: str, known_addresses: list[str], profile: FormProfile) -> str:
     m = re.search(r"\.f1_(\d+)\[", field_name)
-    if m and line in IRS_LINE_BASE:
+    if m and line in profile.line_base:
         num = int(m.group(1))
-        base = IRS_LINE_BASE[line]
+        base = profile.line_base[line]
         if base <= num <= base + 3:
             return PROPERTY_NAMES[num - base]
     # Some real-world PDFs have malformed/reused numeric suffixes. If only A is
@@ -124,7 +120,7 @@ def _property_from_irs_field(line: str, field_name: str, known_addresses: list[s
     raise ExtractionError(f"Cannot determine property column for field {field_name}")
 
 
-def _parse_irs_acroform(fields: dict[str, Any]) -> list[dict[str, Any]]:
+def _parse_irs_acroform(fields: dict[str, Any], profile: FormProfile = FORM_8825_2025_12) -> list[dict[str, Any]]:
     props = {p: _empty_property(p) for p in PROPERTY_NAMES}
     populated_addresses: list[str] = []
 
@@ -156,7 +152,7 @@ def _parse_irs_acroform(fields: dict[str, Any]) -> list[dict[str, Any]]:
         val = _field_value(meta)
         if val in (None, ""):
             continue
-        p = _property_from_irs_field(line, key, populated_addresses)
+        p = _property_from_irs_field(line, key, populated_addresses, profile)
         if line in INCOME_KEYS:
             props[p]["income_line_items"][INCOME_KEYS[line]] = parse_money(val)
         elif line in EXPENSE_KEYS:
@@ -201,9 +197,16 @@ def extract_8825(pdf_path: str | Path, *, validate: bool = True, allow_ocr: bool
     except Exception as exc:
         raise ExtractionError(f"Unreadable/corrupt PDF: {exc}") from exc
 
-    props = _parse_canonical_fields(fields)
-    if not props:
-        props = _parse_irs_acroform(fields)
+    profile = detect_profile(fields) if fields else None
+    if fields and profile is None:
+        raise ExtractionError(
+            "Unsupported Form 8825 AcroForm layout. Add a versioned profile and regression fixture "
+            "before accepting this field structure."
+        )
+
+    props = _parse_canonical_fields(fields) if profile and profile.profile_id.startswith("synthetic-") else []
+    if not props and profile:
+        props = _parse_irs_acroform(fields, profile)
 
     if not props:
         usable, diagnostics = usable_text_layer(pdf_path)

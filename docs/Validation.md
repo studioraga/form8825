@@ -468,3 +468,7 @@ For the , present evidence in this order:
 46. run `./scripts/verify_all.sh`, then show clean Git status and the baseline commit.
 
 This ordering matches the assignment rubric: AI/tool proficiency, code quality, extraction accuracy, data modeling, frontend implementation, and API design.
+
+## P0.1 — Versioned profile verification
+
+Run `./scripts/verify_p0_01_profiles.sh`. The gate proves that the supplied IRS form resolves to `irs-8825-2025-12`, the generated fixture resolves to `synthetic-8825-2025-12`, both still extract exactly, and an unknown AcroForm structure is rejected rather than interpreted with a stale map.

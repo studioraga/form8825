@@ -177,3 +177,7 @@ git remote -v
 git push origin HEAD
 ```
 Keep the final terminal evidence for the full verifier PASS, `git status`, and `git log -1 --stat`.
+
+## P0.1 validation — versioned Form 8825 profiles
+
+Before accepting another IRS revision, add a `FormProfile` in `src/form8825/profiles.py`, add a revision-specific fixture/test, and run `./scripts/verify_p0_01_profiles.sh`. Do not reuse the December 2025 field map for an unrecognized form signature.

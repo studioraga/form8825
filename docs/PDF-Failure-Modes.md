@@ -72,3 +72,7 @@ A production implementation should retain, for every extracted value:
 - validation result.
 
 Low-confidence values or arithmetic mismatches must not be silently accepted.
+
+## Version/revision mismatch
+
+An AcroForm can be readable while still being unsafe to interpret with the wrong field map. `detect_profile()` therefore identifies known field signatures before line mapping. Unknown field structures raise `Unsupported Form 8825 AcroForm layout` instead of reusing the December 2025 mapping. Supporting a future revision requires an explicit profile and regression fixture.

@@ -445,3 +445,7 @@ Playwright end-to-end UI test
 ```
 
 Use `scripts/verify_all.sh` for the final gate. Detailed commands and expected results are in [`Validation.md`](Validation.md).
+
+## 11. Versioned form profiles
+
+Form-layout knowledge is isolated in `src/form8825/profiles.py`. Extraction first detects a supported structural profile from AcroForm field signatures; filenames are not trusted as revision identifiers. The initial registry contains `irs-8825-2025-12` for the supplied IRS form and `synthetic-8825-2025-12` for the generated A/B/C fixture. Unknown AcroForm layouts fail closed until a profile plus regression fixture is added.

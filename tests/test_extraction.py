@@ -132,3 +132,25 @@ def test_multi_property_fixture_is_reproducible():
     second = hashlib.sha256(pdf.read_bytes()).hexdigest()
 
     assert first == second
+
+
+def test_versioned_profiles_detect_real_and_synthetic_layouts():
+    from pypdf import PdfReader
+    from form8825.profiles import detect_profile
+
+    real = detect_profile(PdfReader(str(ROOT / "data/f8825.pdf")).get_fields() or {})
+    synthetic = detect_profile(PdfReader(str(ROOT / "data/f8825_multi_ABC.pdf")).get_fields() or {})
+
+    assert real is not None and real.profile_id == "irs-8825-2025-12"
+    assert synthetic is not None and synthetic.profile_id == "synthetic-8825-2025-12"
+
+
+def test_unknown_acroform_layout_fails_closed(tmp_path):
+    unknown = tmp_path / "unknown-layout.pdf"
+    c = canvas.Canvas(str(unknown))
+    c.acroForm.textfield(name="unknown.field", value="123", x=50, y=700, width=100, height=20)
+    c.showPage()
+    c.save()
+
+    with pytest.raises(ExtractionError, match="Unsupported Form 8825 AcroForm layout"):
+        extract_8825(unknown)

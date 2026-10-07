@@ -87,3 +87,7 @@ Finish with:
 git status
 git log -1 --stat
 ```
+
+### Enhancement: versioned Form 8825 profiles
+
+For production evolution, point to `src/form8825/profiles.py`: the field map is revision-scoped, detected by structural signatures, and unsupported revisions are rejected. This is the first control to discuss when asked how the solution handles future IRS form changes.

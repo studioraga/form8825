@@ -143,3 +143,7 @@ The user's Node 22 workstation subsequently validated the Vite production build,
 - malware/content scanning for uploads;
 - durable object/file storage rather than temporary upload bytes;
 - browser UI for reason entry and richer audit filtering.
+
+### P0.1 — Versioned layout profiles
+
+The extractor no longer assumes every AcroForm is the December 2025 layout. Structural profile detection selects the real/synthetic mappings and unknown AcroForms fail closed. This converts form-revision support into an explicit registry plus regression-test contract.
