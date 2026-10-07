@@ -181,3 +181,7 @@ Keep the final terminal evidence for the full verifier PASS, `git status`, and `
 ## P0.1 validation — versioned Form 8825 profiles
 
 Before accepting another IRS revision, add a `FormProfile` in `src/form8825/profiles.py`, add a revision-specific fixture/test, and run `./scripts/verify_p0_01_profiles.sh`. Do not reuse the December 2025 field map for an unrecognized form signature.
+
+## P0.2 validation — flattened PDFs
+
+Calibrate a new flattened form by adding a versioned `FlatLayoutProfile` with measured cell boxes and a representative fixture. Run `./scripts/verify_p0_02_flattened.sh` before enabling the profile. Never infer arbitrary table geometry from a filename alone.

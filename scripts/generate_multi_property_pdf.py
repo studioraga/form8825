@@ -7,6 +7,7 @@ from reportlab.lib.pagesizes import letter
 ROOT = Path(__file__).resolve().parents[1]
 OUT_PDF = ROOT / "data" / "f8825_multi_ABC.pdf"
 OUT_JSON = ROOT / "data" / "f8825_multi_ABC_expected.json"
+OUT_FLAT_PDF = ROOT / "data" / "f8825_multi_ABC_flattened.pdf"
 
 source = [
     {
@@ -85,3 +86,30 @@ c.save()
 OUT_JSON.write_text(json.dumps(source, indent=2)+"\n", encoding="utf-8")
 print(OUT_PDF)
 print(OUT_JSON)
+
+
+def generate_flattened_fixture() -> None:
+    fc = canvas.Canvas(str(OUT_FLAT_PDF), pagesize=letter, invariant=1)
+    fc.setTitle("Simulated Form 8825 - Flattened Properties A B C")
+    fc.setFont("Helvetica", 5)
+    fc.drawString(36, h-18, "FORM8825_FLAT_PROFILE=synthetic-8825-2025-12-flat")
+    fc.setFont("Helvetica-Bold", 14)
+    fc.drawString(36, h-38, "Form 8825 - Simulated Flattened Multi-Property Test Fixture")
+    flat_cols = {"label": 36, "A": 300, "B": 410, "C": 510}
+    for p in source:
+        x = flat_cols[p["property_name"]]
+        fc.setFont("Helvetica", 5)
+        fc.drawString(x, h-105, p["property_address"])
+    fy = h-132
+    for line,label,key,bucket in rows:
+        fc.setFont("Helvetica", 7)
+        fc.drawString(flat_cols["label"], fy+3, f"{line}  {label}")
+        for p in source:
+            x=flat_cols[p["property_name"]]
+            fc.drawString(x, fy+2, f"{p[bucket][key]:,}")
+        fy -= 20
+    fc.save()
+
+
+generate_flattened_fixture()
+print(OUT_FLAT_PDF)

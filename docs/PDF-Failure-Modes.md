@@ -76,3 +76,7 @@ Low-confidence values or arithmetic mismatches must not be silently accepted.
 ## Version/revision mismatch
 
 An AcroForm can be readable while still being unsafe to interpret with the wrong field map. `detect_profile()` therefore identifies known field signatures before line mapping. Unknown field structures raise `Unsupported Form 8825 AcroForm layout` instead of reusing the December 2025 mapping. Supporting a future revision requires an explicit profile and regression fixture.
+
+## Flattened text PDFs
+
+Flattened text is now supported only when `detect_flattened_profile()` recognizes a calibrated coordinate profile. The parser crops profile-defined address and line cells with `pdfplumber`, then uses the same canonical validation rules as AcroForm extraction. A text-bearing PDF with no recognized coordinate profile is rejected rather than guessed.

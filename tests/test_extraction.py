@@ -154,3 +154,9 @@ def test_unknown_acroform_layout_fails_closed(tmp_path):
 
     with pytest.raises(ExtractionError, match="Unsupported Form 8825 AcroForm layout"):
         extract_8825(unknown)
+
+
+def test_flattened_multi_property_fixture_matches_expected_json():
+    actual = extract_8825(ROOT / "data/f8825_multi_ABC_flattened.pdf")
+    expected = json.loads((ROOT / "data/f8825_multi_ABC_expected.json").read_text())
+    assert actual == expected

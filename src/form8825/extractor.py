@@ -10,6 +10,7 @@ import pdfplumber
 from pypdf import PdfReader
 
 from .profiles import FORM_8825_2025_12, FormProfile, detect_profile
+from .flattened import detect_flattened_profile, parse_flattened
 
 PROPERTY_NAMES = ["A", "B", "C", "D"]
 INCOME_KEYS = {"2a": "gross_rents", "2b": "other_income"}
@@ -221,10 +222,13 @@ def extract_8825(pdf_path: str | Path, *, validate: bool = True, allow_ocr: bool
                 "No usable AcroForm values and no usable text layer. Likely scanned/image-only input. "
                 f"Diagnostics: {diagnostics}"
             )
-        raise ExtractionError(
-            "Text layer exists but no supported Form 8825 field structure was found. "
-            "For flattened text PDFs, add coordinate/word-table mapping for the form revision."
-        )
+        flat_profile = detect_flattened_profile(pdf_path)
+        if flat_profile is None:
+            raise ExtractionError(
+                "Text layer exists but no supported Form 8825 flattened layout profile was found. "
+                "Add a versioned coordinate profile and regression fixture before accepting this layout."
+            )
+        props = parse_flattened(pdf_path, flat_profile, parse_money)
 
     if validate:
         all_errors = {p["property_name"]: validate_property(p) for p in props}

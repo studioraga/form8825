@@ -472,3 +472,7 @@ This ordering matches the assignment rubric: AI/tool proficiency, code quality, 
 ## P0.1 — Versioned profile verification
 
 Run `./scripts/verify_p0_01_profiles.sh`. The gate proves that the supplied IRS form resolves to `irs-8825-2025-12`, the generated fixture resolves to `synthetic-8825-2025-12`, both still extract exactly, and an unknown AcroForm structure is rejected rather than interpreted with a stale map.
+
+## P0.2 — Flattened coordinate extraction verification
+
+Run `./scripts/verify_p0_02_flattened.sh`. It regenerates the flattened A/B/C fixture, extracts it through coordinate profiles, compares the result exactly with `f8825_multi_ABC_expected.json`, and proves that the existing AcroForm fixture still matches the same oracle.

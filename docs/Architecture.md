@@ -449,3 +449,7 @@ Use `scripts/verify_all.sh` for the final gate. Detailed commands and expected r
 ## 11. Versioned form profiles
 
 Form-layout knowledge is isolated in `src/form8825/profiles.py`. Extraction first detects a supported structural profile from AcroForm field signatures; filenames are not trusted as revision identifiers. The initial registry contains `irs-8825-2025-12` for the supplied IRS form and `synthetic-8825-2025-12` for the generated A/B/C fixture. Unknown AcroForm layouts fail closed until a profile plus regression fixture is added.
+
+## 12. Flattened text-coordinate extraction
+
+Flattened PDFs with a supported layout profile are handled by `src/form8825/flattened.py`. The profile defines page-specific address and line-value bounding boxes in PDF coordinates. `pdfplumber` crops each cell, extracts text, normalizes money, and feeds the same canonical schema and arithmetic validation layer used by AcroForms. The generated `data/f8825_multi_ABC_flattened.pdf` is the regression fixture for this path. Unknown flattened layouts continue to fail closed.

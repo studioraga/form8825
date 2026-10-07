@@ -147,3 +147,7 @@ The user's Node 22 workstation subsequently validated the Vite production build,
 ### P0.1 — Versioned layout profiles
 
 The extractor no longer assumes every AcroForm is the December 2025 layout. Structural profile detection selects the real/synthetic mappings and unknown AcroForms fail closed. This converts form-revision support into an explicit registry plus regression-test contract.
+
+### P0.2 — Flattened coordinate extraction
+
+The former flattened-PDF failure path now has a real profile-driven implementation. A generated flattened A/B/C fixture is parsed through `pdfplumber` cell crops and compared against the same expected JSON used by the AcroForm fixture, while unknown layouts remain fail-closed.
