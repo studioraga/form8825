@@ -211,3 +211,29 @@ def test_optimistic_concurrency_rejects_stale_edit():
         },
     )
     assert stale.status_code == 409
+
+
+def test_duplicate_document_policies(monkeypatch):
+    monkeypatch.setenv("DUPLICATE_DOCUMENT_POLICY", "reuse")
+    first = upload_multi()
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        reused = client.post("/documents", files={"file": ("again.pdf", f, "application/pdf")})
+    assert reused.status_code == 200
+    assert reused.json()["document_id"] == first["document_id"]
+    assert reused.json()["duplicate_action"] == "reused"
+
+    monkeypatch.setenv("DUPLICATE_DOCUMENT_POLICY", "reject")
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        rejected = client.post("/documents", files={"file": ("again.pdf", f, "application/pdf")})
+    assert rejected.status_code == 409
+
+    monkeypatch.setenv("DUPLICATE_DOCUMENT_POLICY", "reprocess")
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        reprocessed = client.post("/documents", files={"file": ("again.pdf", f, "application/pdf")})
+    assert reprocessed.status_code == 200
+    body = reprocessed.json()
+    assert body["document_id"] != first["document_id"]
+    assert body["duplicate_action"] == "reprocessed"
+    stored = client.get(f"/documents/{body['document_id']}").json()
+    assert stored["reprocessed_from_id"] == first["document_id"]
+    assert stored["processing_generation"] == 2

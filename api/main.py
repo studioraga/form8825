@@ -66,6 +66,20 @@ async def upload_document(file: UploadFile = File(...), s: Session = Depends(db)
     if not raw.startswith(b"%PDF-"):
         raise HTTPException(400, "File is not a PDF")
 
+    sha256 = hashlib.sha256(raw).hexdigest()
+    policy = os.getenv("DUPLICATE_DOCUMENT_POLICY", "reuse").lower()
+    if policy not in {"reuse", "reject", "reprocess"}:
+        raise HTTPException(500, f"Invalid DUPLICATE_DOCUMENT_POLICY: {policy}")
+    existing = s.query(Document).filter_by(sha256=sha256).order_by(Document.id.desc()).first()
+    if existing and policy == "reuse":
+        return {
+            "document_id": existing.id,
+            "duplicate_action": "reused",
+            "properties": [serialize_property(p) for p in existing.properties],
+        }
+    if existing and policy == "reject":
+        raise HTTPException(409, f"Duplicate document SHA-256 already stored as document {existing.id}")
+
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
         tmp.write(raw)
         path = tmp.name
@@ -83,8 +97,10 @@ async def upload_document(file: UploadFile = File(...), s: Session = Depends(db)
     try:
         doc = Document(
             filename=file.filename or "upload.pdf",
-            sha256=hashlib.sha256(raw).hexdigest(),
+            sha256=sha256,
             extraction_status="completed",
+            reprocessed_from_id=existing.id if existing and policy == "reprocess" else None,
+            processing_generation=(existing.processing_generation + 1) if existing and policy == "reprocess" else 1,
         )
         s.add(doc)
         s.flush()
@@ -115,7 +131,7 @@ async def upload_document(file: UploadFile = File(...), s: Session = Depends(db)
         s.rollback()
         raise HTTPException(500, "Database persistence failed") from exc
 
-    return {"document_id": doc.id, "properties": [serialize_property(p) for p in doc.properties]}
+    return {"document_id": doc.id, "duplicate_action": "reprocessed" if doc.reprocessed_from_id else "created", "properties": [serialize_property(p) for p in doc.properties]}
 
 
 @app.get("/documents/{document_id}")
@@ -128,6 +144,8 @@ def get_document(document_id: int, s: Session = Depends(db), _principal: Princip
         "filename": doc.filename,
         "sha256": doc.sha256,
         "extraction_status": doc.extraction_status,
+        "reprocessed_from_id": doc.reprocessed_from_id,
+        "processing_generation": doc.processing_generation,
         "properties": [serialize_property(p) for p in doc.properties],
     }
 

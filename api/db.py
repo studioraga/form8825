@@ -34,6 +34,8 @@ class Document(Base):
     sha256: Mapped[str] = mapped_column(String(64), index=True)
     extraction_status: Mapped[str] = mapped_column(String(32), default="completed")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    reprocessed_from_id: Mapped[int | None] = mapped_column(ForeignKey("documents.id"), nullable=True)
+    processing_generation: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
     properties = relationship("Property", back_populates="document", cascade="all, delete-orphan")
 

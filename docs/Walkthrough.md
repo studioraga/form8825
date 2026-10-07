@@ -111,3 +111,7 @@ Show that React is not the security boundary. FastAPI enforces viewer versus rev
 ### Enhancement: concurrent reviewer safety
 
 Demonstrate one accepted correction followed by a stale retry. The second request is rejected with 409, showing that concurrent review conflicts are surfaced instead of silently losing another user's change.
+
+### Enhancement: duplicate and reprocessing semantics
+
+Use SHA-256 lineage to explain idempotency versus intentional reruns. A repeated upload can reuse, reject, or create generation 2 linked to generation 1; the behavior is configuration, not an accidental side effect.

@@ -494,3 +494,7 @@ Run `./scripts/verify_p1_02_auth_rbac.sh`. The test enables authentication, prov
 ## P1.3 — Optimistic concurrency verification
 
 Run `./scripts/verify_p1_03_concurrency.sh`. The test uploads a document, performs one successful edit with the current version, confirms the version increments, then reuses the stale version for a second edit and requires HTTP 409.
+
+## P1.4 — Duplicate/reprocessing verification
+
+Run `./scripts/verify_p1_04_duplicates.sh`. The test uploads one fixture and verifies all three policies: `reuse` returns the original document ID, `reject` returns 409, and `reprocess` creates a new document linked to the first with generation 2.

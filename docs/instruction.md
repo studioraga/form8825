@@ -201,3 +201,7 @@ For secured execution set `AUTH_MODE=enabled` and define `FORM8825_API_KEYS`, fo
 ## P1.3 deployment — optimistic concurrency
 
 Run `alembic upgrade head` to add `properties.version`. Clients must preserve the version returned by document/property responses and submit it as `expected_version` on PATCH. Handle HTTP 409 by reloading the current property state before retrying.
+
+## P1.4 deployment — duplicate policy
+
+Set `DUPLICATE_DOCUMENT_POLICY` to `reuse`, `reject`, or `reprocess`. The default is `reuse`. Use `reprocess` when intentionally rerunning the same bytes after parser/profile changes; use `reject` when duplicate submission should be a client-visible conflict. Run `alembic upgrade head` before enabling the feature.

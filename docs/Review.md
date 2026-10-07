@@ -169,3 +169,7 @@ The API now distinguishes viewer, reviewer, and administrator capabilities with 
 ### P1.3 — Optimistic concurrency
 
 Property edits now carry a version token. The backend rejects stale reviewer writes with 409 and only increments the version after a committed update, preventing silent last-write-wins behavior.
+
+### P1.4 — Duplicate/reprocessing policy
+
+Uploads are now de-duplicated by SHA-256 under an explicit policy. The model can reuse prior work, reject duplicates, or create a traceable new processing generation, which is safer than silently creating indistinguishable duplicate rows.

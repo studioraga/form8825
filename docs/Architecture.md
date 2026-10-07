@@ -469,3 +469,7 @@ The API boundary now has an explicit `X-API-Key` security dependency with hierar
 ## 16. Optimistic concurrency
 
 Manual review is no longer last-write-wins. Property state includes a version counter shared by API and React. The browser submits the version it edited; FastAPI rejects stale updates with HTTP 409 and increments the version only after a successful correction/recalculation transaction. This makes concurrent reviewer conflicts explicit.
+
+## 17. Duplicate/reprocessing control
+
+Document identity is SHA-256 based. Upload handling checks prior documents before extraction and applies an explicit policy: reuse prior results, reject the duplicate, or create a new processing generation linked to the prior document. This avoids accidental duplicate work while preserving a deliberate reprocessing path when software/profile versions change.

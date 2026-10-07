@@ -112,3 +112,7 @@ Set `AUTH_MODE=enabled` and configure `FORM8825_API_KEYS` as comma-separated `ke
 ## Optimistic concurrency
 
 Each property carries a monotonically increasing `version`. `PATCH /properties/{property_id}/value` requires `expected_version`; stale edits receive HTTP 409 instead of silently overwriting a newer reviewer change. A successful edit increments the property version and returns the new version with the recalculated values.
+
+## Duplicate and reprocessing policy
+
+`POST /documents` computes SHA-256 before extraction and applies `DUPLICATE_DOCUMENT_POLICY`: `reuse` returns the newest existing document for the hash, `reject` returns HTTP 409, and `reprocess` creates a new document linked to the previous record. Responses expose `duplicate_action` so callers can distinguish `created`, `reused`, and `reprocessed` outcomes.

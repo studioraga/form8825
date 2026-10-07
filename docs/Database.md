@@ -92,3 +92,7 @@ The current RBAC implementation intentionally reads API-key principals from envi
 ## Property versioning
 
 `properties.version` is an integer concurrency token introduced by Alembic revision `0002`. It starts at 1 and increments after each accepted source-value correction. API callers must submit the version they observed; stale versions are rejected before any line value or audit row is changed.
+
+## Document reprocessing lineage
+
+Alembic revision `0003` adds `documents.reprocessed_from_id` and `processing_generation`. A reprocessed document points to the previous stored document with the same SHA-256 and increments its generation. SHA-256 remains indexed but is intentionally not unique because controlled reprocessing is allowed.
