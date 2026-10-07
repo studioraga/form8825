@@ -121,7 +121,7 @@ Added/expanded:
 
 In the review environment:
 
-- Python test suite after fixture-reproducibility coverage: **18 passed**;
+- Python test suite after the priority enhancement series: **32 passed** in the review environment;
 - supplied PDF extraction: exact expected JSON passed;
 - A/B/C extraction: exact expected JSON passed;
 - CSV validation: all rows passed;
@@ -133,16 +133,18 @@ In the review environment:
 
 The user's Node 22 workstation subsequently validated the Vite production build, both Playwright end-to-end tests, the live API/SQLite verification, and the aggregate Task 1-4 gate. After the later readiness/reproducibility hardening, the complete aggregate verifier must be rerun once more before the Git baseline commit so that the final commit matches the exact validated source.
 
-## Remaining production extensions (not required by the assignment)
+## Remaining production extensions after the priority hardening series
 
-- actual scanned-PDF OCR implementation;
-- flattened text-coordinate profile for Form 8825 revisions;
-- Alembic migrations;
-- authentication/authorization and reviewer identity in audit records;
-- structured logging/metrics;
-- malware/content scanning for uploads;
-- durable object/file storage rather than temporary upload bytes;
-- browser UI for reason entry and richer audit filtering.
+The priority backlog in this review is now implemented and individually verifiable: versioned profiles, flattened extraction, OCR, Alembic, RBAC, optimistic concurrency, duplicate/reprocessing policy, structured audit identity, background jobs, observability, UI accessibility contracts, and OpenAPI contract tests. Remaining production work is primarily platform integration and scale hardening:
+
+- enterprise OIDC/OAuth2/JWT identity instead of environment-backed API keys;
+- durable external work queue plus object storage for multi-process/high-volume deployment;
+- persisted OCR confidence and a human-review queue for uncertain fields;
+- malware/content scanning, rate limiting, and stricter CPU/time/page limits for hostile uploads;
+- password/key-management workflow for encrypted PDFs;
+- production database (for example PostgreSQL), backup/restore, HA, and migration rollout policy;
+- richer reviewer UI for correction reason entry, audit filtering, and job status;
+- centralized metrics/log backend and alerting/SLO policy.
 
 ### P0.1 — Versioned layout profiles
 
@@ -192,3 +194,8 @@ The review UI now labels the PDF upload explicitly, exposes errors as alerts, ma
 
 The P2.3 browser harness now isolates repeated fixture uploads with `DUPLICATE_DOCUMENT_POLICY=reprocess`. This is important because the production default duplicate policy can reuse an already edited document; test isolation must not depend on execution order or worker scheduling. The invalid-number contract therefore verifies restoration to the currently persisted value.
 
+### P2.4 — OpenAPI contract tests
+
+The runtime-derived OpenAPI snapshot is now tied to the pinned API dependency stack. This prevents a schema serialization change caused only by dependency drift from being mistaken for an intentional client-contract change.
+
+A deterministic OpenAPI snapshot and contract suite now protect the public API shape. Tests require the expected routes, API-key security scheme, and optimistic-concurrency request field, turning accidental API drift into a reviewable failure.

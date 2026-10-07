@@ -132,3 +132,7 @@ All HTTP requests pass through correlation/metrics middleware. `X-Request-ID` is
 ## Front-end accessibility interaction contract
 
 API errors surfaced by the React client are rendered with `role="alert"`, upload progress uses an `aria-live` region, and server validation remains authoritative. The API itself is unchanged by accessibility support; UI tests verify that backend failures are exposed through accessible status semantics.
+
+## OpenAPI contract snapshot
+
+The runtime OpenAPI document is exported deterministically to [`openapi.json`](openapi.json). Contract tests compare the committed snapshot with `app.openapi()` and assert that required routes, API-key security, and the optimistic-concurrency request field remain present. Any API shape change must intentionally regenerate and review the snapshot.

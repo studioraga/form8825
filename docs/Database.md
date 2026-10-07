@@ -112,3 +112,7 @@ No new observability table is required for the baseline. Request correlation is 
 ## Front-end testing impact on persistence
 
 Component/accessibility coverage does not change the database schema. Tests continue to exercise real persistence through the browser, including versioned edits and reload behavior, while verifying the semantic UI around those workflows.
+
+## Contract tests and persistence
+
+OpenAPI contract testing does not change the database schema, but it protects the API fields that expose persistence semantics such as document IDs, job IDs, audit resources, and `expected_version` on corrections. Schema evolution and API evolution remain independently reviewable through Alembic and OpenAPI snapshots.

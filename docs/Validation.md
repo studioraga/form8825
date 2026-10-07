@@ -517,3 +517,12 @@ Run `./scripts/verify_p2_03_frontend_accessibility.sh`. It performs a clean `npm
 
 The Playwright test server forces `DUPLICATE_DOCUMENT_POLICY=reprocess` so each fixture upload receives a fresh document even when tests run concurrently. This prevents one test's manual correction from leaking into another test through the SHA-256 duplicate-reuse path. The non-integer draft test also captures the currently persisted value and asserts that blur restores that value rather than assuming a hard-coded starting number.
 
+## P2.4 — OpenAPI/contract verification
+
+Run `./scripts/verify_p2_04_openapi_contract.sh`. The script regenerates the runtime OpenAPI document in memory, compares it byte-for-byte with `docs/openapi.json`, and runs contract assertions for required routes, API-key security, and the required `expected_version` correction field.
+
+The OpenAPI snapshot is runtime-derived and therefore must be generated from the declared pinned API stack. The verifier checks `pip check` plus the pinned FastAPI, Pydantic, Starlette, and multipart package versions before comparing the snapshot. On a fresh environment, run `pip install -r requirements.txt` before exporting or validating `docs/openapi.json`.
+
+## Aggregate priority-enhancement gate
+
+After validating each priority independently, run `./scripts/verify_priority_enhancements.sh` to execute the complete P0/P1/P2 hardening series in dependency order. It includes the OCR and React gates, so Node 22, Chromium, Tesseract, and Poppler must be installed. For backend-only qualification in a restricted environment, `SKIP_FRONTEND=1` skips only the P2.3 browser gate; it must be rerun without the skip before the final Git push.

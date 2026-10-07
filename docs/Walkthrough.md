@@ -69,16 +69,16 @@ Explain the edit-on-blur behavior, totals test IDs, audit display, local-storage
 
 ## 19-20 minutes — production extensions
 
-Mention:
+The repository now implements the original priority hardening backlog (versioned profiles, flattened/OCR extraction, Alembic, RBAC, concurrency, duplicate policy, attributable audits, jobs, observability, accessibility contracts, and OpenAPI contract tests). Use the final minute for the next platform-level steps:
 
-- versioned IRS form-layout profiles;
-- scanned-PDF OCR with confidence and coordinate mapping;
-- password workflow for encrypted PDFs;
-- stricter resource/time limits;
-- migrations (Alembic) instead of `create_all`;
-- authentication/authorization for real reviewer edits;
-- structured logs/metrics;
-- human review queue for low-confidence fields.
+- enterprise OIDC/JWT and centralized secret management;
+- durable external queue/object storage for scale and process restarts;
+- persisted OCR confidence plus human review routing;
+- password/key-management workflow for encrypted PDFs;
+- malware/content scanning, rate limits, and stricter resource/time limits;
+- production PostgreSQL/HA/backup rollout;
+- richer correction-reason and audit/job UI;
+- centralized dashboards, alerts, and SLOs.
 
 Finish with:
 
@@ -131,3 +131,7 @@ Show one request carrying `X-Request-ID`, then the response header, structured r
 ### Enhancement: UI component and accessibility quality
 
 Show keyboard-only correction with Enter/Escape and the labeled upload/error surfaces. Emphasize that the same browser suite now checks semantic accessibility contracts in addition to business correctness and persistence.
+
+### Enhancement: API contract governance
+
+Show `docs/openapi.json` beside `tests/test_openapi_contract.py`. Explain that implementation changes are not allowed to silently reshape the client contract; any intentional change produces a committed schema diff and must pass contract verification.

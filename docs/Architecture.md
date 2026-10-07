@@ -35,8 +35,8 @@ flowchart TB
         ACRO{"Supported AcroForm fields?"}
         FIELD["Semantic Field Mapping<br/>Lines 2a-19, Properties A-D"]
         TEXT{"Usable text layer?"}
-        FLAT["Flattened PDF<br/>Coordinate/layout adapter required"]
-        SCAN["Scanned/image PDF<br/>Optional OCR extension"]
+        FLAT["Flattened PDF<br/>Profile-driven coordinate extraction"]
+        SCAN["Scanned/image PDF<br/>Tesseract + Poppler OCR profile"]
         CANON["Canonical Property JSON<br/>Whole-dollar integers"]
         VALID{"Arithmetic valid?<br/>Lines 2c, 18, and 19"}
         REJECT["Fail Closed<br/>Controlled extraction error"]
@@ -48,9 +48,11 @@ flowchart TB
 
         ACRO -->|No| TEXT
         TEXT -->|Yes| FLAT
-        FLAT --> REJECT
+        FLAT --> CANON
+        FLAT -.->|Unknown layout| REJECT
         TEXT -->|No| SCAN
-        SCAN --> REJECT
+        SCAN --> CANON
+        SCAN -.->|Unsupported OCR profile| REJECT
 
         VALID -->|No| REJECT
     end
@@ -104,7 +106,7 @@ flowchart TB
 
 **Architecture principle:** PDF acquisition and field interpretation are separated from canonical financial validation. FastAPI owns server-side recalculation and audit persistence, while React provides the human review surface. An independent verification pipeline checks extraction accuracy, financial invariants, database provenance, and browser behavior before the Git baseline is accepted.
 
-The flattened-text and scanned-PDF branches are intentionally represented as extension paths. The current baseline fails closed rather than silently accepting unsupported extraction paths.
+Flattened-text and scanned-PDF branches are implemented for recognized versioned profiles. Unknown flattened layouts, unsupported OCR profiles, missing OCR dependencies, and unrecognized AcroForm revisions still fail closed rather than being guessed.
 
 ## 3. Extraction hierarchy
 
@@ -123,9 +125,9 @@ Supported field layouts:
 
 ### 3.3 Flattened text and scanned input
 
-The baseline intentionally fails closed if a PDF has no supported AcroForm structure. If substantial text exists, the error identifies the missing flattened-coordinate implementation. If substantial text does not exist, the error identifies likely scanned/image-only input.
+If a PDF has no supported AcroForm structure, the extractor classifies the remaining path. A substantial text layer is accepted only when a versioned flattened-coordinate profile is recognized. Image-only input can use the opt-in OCR path (`allow_ocr=True`), which renders the page, recognizes words/confidence with Tesseract, and maps tokens through a supported layout profile. Unknown layouts and unsupported OCR profiles fail closed.
 
-The optional scanned path is documented in [`PDF-Failure-Modes.md`](PDF-Failure-Modes.md) and uses page rendering + OCR + bounding boxes + confidence + version-specific cell geometry before feeding the same canonical validation layer.
+See [`PDF-Failure-Modes.md`](PDF-Failure-Modes.md) for dependency, confidence, and failure-handling details.
 
 ## 4. Canonical property schema
 
@@ -489,3 +491,7 @@ The API now has a request-correlation layer shared by application logs and finan
 ## 21. React component contracts and accessibility
 
 The browser validation layer now includes focused component-contract tests for `LineInput` keyboard behavior plus accessibility assertions for upload labeling, heading structure, property landmarks, input accessible names, and alert semantics. The implementation remains dependency-light by reusing Playwright instead of adding a second browser DOM stack.
+
+## 22. API contract governance
+
+The API surface is treated as a versioned artifact rather than incidental FastAPI metadata. `scripts/export_openapi.py` materializes the runtime schema, and contract tests fail if the committed OpenAPI snapshot drifts. This provides a reviewable boundary between React/external clients and server implementation.

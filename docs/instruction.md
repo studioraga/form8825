@@ -224,3 +224,12 @@ Use Node 22 from `frontend/.nvmrc`, then run `./scripts/verify_p2_03_frontend_ac
 
 For Playwright validation, keep `DUPLICATE_DOCUMENT_POLICY=reprocess` in the test web-server command. The component/accessibility suite uploads the same deterministic fixture from multiple tests, so test runs must create isolated document rows instead of reusing a document mutated by another worker. Do not replace this with the production duplicate policy when running the test suite.
 
+## P2.4 deployment — API contract changes
+
+After an intentional API change run `PYTHONPATH=. .venv/bin/python scripts/export_openapi.py`, review `git diff -- docs/openapi.json`, and run `./scripts/verify_p2_04_openapi_contract.sh`. Do not refresh the snapshot merely to silence a failing test; the diff is the API compatibility review artifact.
+
+Before exporting the snapshot, install the exact repository dependencies with `pip install -r requirements.txt` and require `pip check` to pass. P2.4 pins the API schema-producing stack, including Starlette, so a committed OpenAPI diff represents an intentional API/runtime change rather than dependency drift.
+
+## Final priority-series pre-push gate
+
+Run `./scripts/verify_priority_enhancements.sh` after `./scripts/verify_all.sh`. Both must pass on the exact source to be committed. Then regenerate/review `docs/openapi.json` only if the API contract intentionally changed, run `git diff --cached --check`, and confirm no transient DB/log/browser artifacts are staged.
