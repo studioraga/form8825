@@ -217,3 +217,10 @@ Run `alembic upgrade head` to create `processing_jobs`. Use `POST /jobs` for wor
 ## P2.2 deployment — observability
 
 Configure the process logger to retain the `form8825.api` JSON records and scrape `/metrics` from a trusted monitoring network. Propagate `X-Request-ID` from the ingress proxy when available. Do not expose the metrics endpoint to untrusted public networks without gateway controls.
+
+## P2.3 validation — React component/accessibility contracts
+
+Use Node 22 from `frontend/.nvmrc`, then run `./scripts/verify_p2_03_frontend_accessibility.sh`. Treat an unlabeled control, broken keyboard save/reset flow, or missing alert semantics as a release failure. The Playwright web server runs Alembic migrations before starting FastAPI.
+
+For Playwright validation, keep `DUPLICATE_DOCUMENT_POLICY=reprocess` in the test web-server command. The component/accessibility suite uploads the same deterministic fixture from multiple tests, so test runs must create isolated document rows instead of reusing a document mutated by another worker. Do not replace this with the production duplicate policy when running the test suite.
+

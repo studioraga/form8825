@@ -9,7 +9,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'rm -f artifacts/e2e.db && DATABASE_URL=sqlite:///./artifacts/e2e.db .venv/bin/python -m uvicorn api.main:app --host 127.0.0.1 --port 8000',
+      command: 'rm -f artifacts/e2e.db && DATABASE_URL=sqlite:///./artifacts/e2e.db .venv/bin/alembic upgrade head && DATABASE_URL=sqlite:///./artifacts/e2e.db DUPLICATE_DOCUMENT_POLICY=reprocess .venv/bin/python -m uvicorn api.main:app --host 127.0.0.1 --port 8000',
       url: 'http://127.0.0.1:8000/health',
       cwd: '..',
       reuseExistingServer: false,

@@ -128,3 +128,7 @@ Every accepted manual correction records the authenticated subject and role, a r
 ## Observability
 
 All HTTP requests pass through correlation/metrics middleware. `X-Request-ID` is preserved when supplied or generated when absent, returned on the response, and reused by audit logging. Structured JSON request logs include request ID, method, path, status, and duration. `GET /metrics` exposes Prometheus-compatible counters for request volume, response status, and cumulative latency; production deployments should restrict the metrics endpoint at the network/proxy layer.
+
+## Front-end accessibility interaction contract
+
+API errors surfaced by the React client are rendered with `role="alert"`, upload progress uses an `aria-live` region, and server validation remains authoritative. The API itself is unchanged by accessibility support; UI tests verify that backend failures are exposed through accessible status semantics.

@@ -185,3 +185,10 @@ A durable processing-job model and 202/polling API were added. Document extracti
 ### P2.2 — Observability
 
 Request correlation, structured JSON access logging, latency/status counters, and a Prometheus-compatible metrics endpoint were added. Audit rows reuse the same request ID, linking operational telemetry with durable reviewer actions.
+
+### P2.3 — React component tests and accessibility
+
+The review UI now labels the PDF upload explicitly, exposes errors as alerts, marks progress as live status, links property sections to headings, and has focused Playwright tests for `LineInput` keyboard behavior and accessible names. This extends browser automation beyond the happy-path business workflow.
+
+The P2.3 browser harness now isolates repeated fixture uploads with `DUPLICATE_DOCUMENT_POLICY=reprocess`. This is important because the production default duplicate policy can reuse an already edited document; test isolation must not depend on execution order or worker scheduling. The invalid-number contract therefore verifies restoration to the currently persisted value.
+

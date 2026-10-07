@@ -2,7 +2,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:component": "playwright test component_contract.spec.js accessibility.spec.js"
   },
   "dependencies": {
     "react": "19.3.0",

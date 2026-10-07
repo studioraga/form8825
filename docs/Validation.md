@@ -510,3 +510,10 @@ Run `./scripts/verify_p2_01_background_jobs.sh`. The test submits the determinis
 ## P2.2 — Observability verification
 
 Run `./scripts/verify_p2_02_observability.sh`. The test submits a known `X-Request-ID`, requires the same ID in the response, then checks `/metrics` for request and status counters including the `/health` path.
+
+## P2.3 — React component/accessibility verification
+
+Run `./scripts/verify_p2_03_frontend_accessibility.sh`. It performs a clean `npm ci`, production Vite build, and focused Playwright component/accessibility tests. The tests cover upload labeling, semantic headings/landmarks, accessible input names, alert announcements, keyboard save/reset behavior, and rejection of non-integer drafts.
+
+The Playwright test server forces `DUPLICATE_DOCUMENT_POLICY=reprocess` so each fixture upload receives a fresh document even when tests run concurrently. This prevents one test's manual correction from leaking into another test through the SHA-256 duplicate-reuse path. The non-integer draft test also captures the currently persisted value and asserts that blur restores that value rather than assuming a hard-coded starting number.
+

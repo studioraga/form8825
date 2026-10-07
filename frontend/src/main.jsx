@@ -124,14 +124,15 @@ function App() {
     <main>
       <h1>Form 8825 Review</h1>
       <p className="subtitle">Upload, review, correct, recalculate, and audit rental-property values.</p>
-      <input data-testid="pdf-upload" type="file" accept="application/pdf" onChange={upload} />
-      {busy && <p data-testid="upload-status">Extracting…</p>}
-      {error && <pre className="error" data-testid="error-message">{error}</pre>}
+      <label htmlFor="pdf-upload">Upload Form 8825 PDF</label>
+      <input id="pdf-upload" data-testid="pdf-upload" type="file" accept="application/pdf" onChange={upload} />
+      {busy && <p data-testid="upload-status" aria-live="polite">Extracting…</p>}
+      {error && <pre role="alert" className="error" data-testid="error-message">{error}</pre>}
 
       {doc && <p data-testid="document-id">Document #{doc.document_id}</p>}
       {doc?.properties.map((p) => (
-        <section key={p.id} data-testid={`property-${p.property_name}`}>
-          <h2>Property {p.property_name}</h2>
+        <section key={p.id} data-testid={`property-${p.property_name}`} aria-labelledby={`property-${p.property_name}-heading`}>
+          <h2 id={`property-${p.property_name}-heading`}>Property {p.property_name}</h2>
           <p>{p.property_address}</p>
 
           {['income_line_items', 'expense_line_items'].map((category) => (

@@ -108,3 +108,7 @@ Alembic revision `0005` adds `processing_jobs` with filename, SHA-256, status, r
 ## Observability and persistence correlation
 
 No new observability table is required for the baseline. Request correlation is carried in `change_audit.request_id`, while runtime counters/logs remain operational telemetry rather than business records. This avoids mixing short-lived metrics with durable financial audit data.
+
+## Front-end testing impact on persistence
+
+Component/accessibility coverage does not change the database schema. Tests continue to exercise real persistence through the browser, including versioned edits and reload behavior, while verifying the semantic UI around those workflows.

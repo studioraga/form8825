@@ -127,3 +127,7 @@ Contrast `POST /documents` with `POST /jobs`: the former is convenient for the s
 ### Enhancement: observability and correlation
 
 Show one request carrying `X-Request-ID`, then the response header, structured request log, metrics counter, and audit `request_id`. This demonstrates one correlation key across operations and financial evidence.
+
+### Enhancement: UI component and accessibility quality
+
+Show keyboard-only correction with Enter/Escape and the labeled upload/error surfaces. Emphasize that the same browser suite now checks semantic accessibility contracts in addition to business correctness and persistence.

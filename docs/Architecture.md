@@ -485,3 +485,7 @@ Large/OCR workloads can use an asynchronous job boundary. `POST /jobs` persists 
 ## 20. Observability
 
 The API now has a request-correlation layer shared by application logs and financial audit records. Middleware generates/propagates `X-Request-ID`, measures request latency, records status counters, emits structured JSON logs, and exposes a lightweight Prometheus-compatible metrics surface. This provides a consistent trace key from HTTP activity to manual financial changes.
+
+## 21. React component contracts and accessibility
+
+The browser validation layer now includes focused component-contract tests for `LineInput` keyboard behavior plus accessibility assertions for upload labeling, heading structure, property landmarks, input accessible names, and alert semantics. The implementation remains dependency-light by reusing Playwright instead of adding a second browser DOM stack.
