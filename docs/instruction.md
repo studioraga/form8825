@@ -193,3 +193,7 @@ Install optional OCR dependencies with `pip install -r requirements-ocr.txt`; in
 ## P1.1 deployment — schema migrations
 
 After installing `requirements.txt`, run `alembic upgrade head` before starting the API. Do not restore application-level `Base.metadata.create_all()` for production startup. For every later model change, add an Alembic revision and rerun `./scripts/verify_p1_01_migrations.sh`.
+
+## P1.2 deployment — authentication and RBAC
+
+For secured execution set `AUTH_MODE=enabled` and define `FORM8825_API_KEYS`, for example `view-key:viewer:alice,review-key:reviewer:bob`. Configure the React client with `VITE_API_KEY` only for a controlled demo; do not embed long-lived production secrets in a browser build. Run `./scripts/verify_p1_02_auth_rbac.sh` before enabling auth in deployment.

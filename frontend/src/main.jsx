@@ -3,6 +3,8 @@ import {createRoot} from 'react-dom/client';
 import './style.css';
 
 const API = import.meta.env.VITE_API_BASE || 'http://127.0.0.1:8000';
+const API_KEY = import.meta.env.VITE_API_KEY || '';
+const authHeaders = () => API_KEY ? {'X-API-Key': API_KEY} : {};
 
 async function parseResponse(response) {
   if (response.ok) return response.json();
@@ -63,7 +65,7 @@ function App() {
   useEffect(() => {
     const id = localStorage.getItem('form8825.lastDocumentId');
     if (!id) return;
-    fetch(`${API}/documents/${id}`)
+    fetch(`${API}/documents/${id}`, {headers: authHeaders()})
       .then(parseResponse)
       .then(setDoc)
       .catch(() => localStorage.removeItem('form8825.lastDocumentId'));
@@ -77,7 +79,7 @@ function App() {
     try {
       const form = new FormData();
       form.append('file', file);
-      const body = await parseResponse(await fetch(`${API}/documents`, {method: 'POST', body: form}));
+      const body = await parseResponse(await fetch(`${API}/documents`, {method: 'POST', body: form, headers: authHeaders()}));
       setDoc(body);
       setAudit({});
       localStorage.setItem('form8825.lastDocumentId', String(body.document_id));
@@ -94,7 +96,7 @@ function App() {
       const updated = await parseResponse(
         await fetch(`${API}/properties/${property.id}/value`, {
           method: 'PATCH',
-          headers: {'Content-Type': 'application/json'},
+          headers: {'Content-Type': 'application/json', ...authHeaders()},
           body: JSON.stringify({category, key, value, reason: 'manual UI edit'}),
         }),
       );
@@ -111,7 +113,7 @@ function App() {
 
   async function loadAudit(propertyId) {
     try {
-      const rows = await parseResponse(await fetch(`${API}/properties/${propertyId}/audit`));
+      const rows = await parseResponse(await fetch(`${API}/properties/${propertyId}/audit`, {headers: authHeaders()}));
       setAudit((current) => ({...current, [propertyId]: rows}));
     } catch (err) {
       setError(err.message);

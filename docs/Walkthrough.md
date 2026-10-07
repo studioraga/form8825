@@ -103,3 +103,7 @@ Demonstrate the distinction between native text and OCR: `usable_text_layer()` f
 ### Enhancement: production schema evolution
 
 When discussing operational readiness, show the Alembic migration chain and explain why schema changes are no longer side effects of importing FastAPI. Deployment upgrades the database first, then starts the service; tests separately prove downgrade and re-upgrade behavior.
+
+### Enhancement: authentication and role separation
+
+Show that React is not the security boundary. FastAPI enforces viewer versus reviewer permissions even for direct callers. Mention that the environment-backed API-key adapter is intentionally replaceable by enterprise OIDC/JWT without changing the financial data model.

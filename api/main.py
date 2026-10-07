@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from form8825.extractor import ExtractionError, extract_8825  # noqa: E402
 from .db import Base, ChangeAudit, Document, LineValue, Property, SessionLocal, engine  # noqa: E402
+from .auth import Principal, require_role  # noqa: E402
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(20 * 1024 * 1024)))
 
@@ -57,7 +58,7 @@ def health() -> dict[str, str]:
 
 
 @app.post("/documents")
-async def upload_document(file: UploadFile = File(...), s: Session = Depends(db)):
+async def upload_document(file: UploadFile = File(...), s: Session = Depends(db), _principal: Principal = Depends(require_role("reviewer"))):
     raw = await file.read(MAX_UPLOAD_BYTES + 1)
     if len(raw) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, f"PDF exceeds {MAX_UPLOAD_BYTES} byte upload limit")
@@ -117,7 +118,7 @@ async def upload_document(file: UploadFile = File(...), s: Session = Depends(db)
 
 
 @app.get("/documents/{document_id}")
-def get_document(document_id: int, s: Session = Depends(db)):
+def get_document(document_id: int, s: Session = Depends(db), _principal: Principal = Depends(require_role("viewer"))):
     doc = s.get(Document, document_id)
     if not doc:
         raise HTTPException(404, "Document not found")
@@ -138,7 +139,7 @@ class UpdateValue(BaseModel):
 
 
 @app.patch("/properties/{property_id}/value")
-def update_value(property_id: int, body: UpdateValue, s: Session = Depends(db)):
+def update_value(property_id: int, body: UpdateValue, s: Session = Depends(db), _principal: Principal = Depends(require_role("reviewer"))):
     prop = s.get(Property, property_id)
     if not prop:
         raise HTTPException(404, "Property not found")
@@ -200,7 +201,7 @@ def update_value(property_id: int, body: UpdateValue, s: Session = Depends(db)):
 
 
 @app.get("/properties/{property_id}/audit")
-def audit(property_id: int, s: Session = Depends(db)):
+def audit(property_id: int, s: Session = Depends(db), _principal: Principal = Depends(require_role("viewer"))):
     if not s.get(Property, property_id):
         raise HTTPException(404, "Property not found")
     rows = (

@@ -486,3 +486,7 @@ The scanned fixture generator also runs in ReportLab invariant mode after raster
 ## P1.1 — Alembic migration verification
 
 Run `./scripts/verify_p1_01_migrations.sh`. It creates an isolated SQLite database, upgrades to head, checks the required tables plus `alembic_version`, downgrades to base, upgrades again, and prints the active revision. `verify_api_db.sh` also upgrades its isolated database before Uvicorn starts.
+
+## P1.2 — Authentication/RBAC verification
+
+Run `./scripts/verify_p1_02_auth_rbac.sh`. The test enables authentication, proves unauthenticated upload is 401, proves a viewer cannot upload (403), proves a reviewer can upload, and proves the viewer can subsequently read the persisted document.

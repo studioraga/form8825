@@ -461,3 +461,7 @@ When no usable AcroForm or text layer exists and `allow_ocr=True`, the extractor
 ## 14. Schema migrations
 
 Database schema ownership has moved from application-startup `Base.metadata.create_all()` to Alembic. `alembic.ini`, `migrations/env.py`, and ordered revision files define the deployable schema contract. The API process no longer mutates schema on import; deployment/verification runs `alembic upgrade head` first. Tests may still use SQLAlchemy metadata for isolated ephemeral databases.
+
+## 15. API authentication and RBAC
+
+The API boundary now has an explicit `X-API-Key` security dependency with hierarchical `viewer`, `reviewer`, and `admin` roles. Read operations require viewer access; document upload and financial corrections require reviewer access. Authentication can be disabled for the local demonstration, but production verification enables it explicitly. Authorization stays in FastAPI rather than React so direct API callers cannot bypass the policy.

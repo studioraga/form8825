@@ -154,3 +154,32 @@ def test_upload_size_limit_is_enforced(monkeypatch):
         files={"file": ("too-large.pdf", b"%PDF-" + b"x" * 32, "application/pdf")},
     )
     assert response.status_code == 413
+
+
+def test_rbac_api_key_roles(monkeypatch):
+    monkeypatch.setenv("AUTH_MODE", "enabled")
+    monkeypatch.setenv(
+        "FORM8825_API_KEYS",
+        "view-key:viewer:alice,review-key:reviewer:bob,admin-key:admin:root",
+    )
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        unauth = client.post("/documents", files={"file": ("multi.pdf", f, "application/pdf")})
+    assert unauth.status_code == 401
+
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        forbidden = client.post(
+            "/documents",
+            headers={"X-API-Key": "view-key"},
+            files={"file": ("multi.pdf", f, "application/pdf")},
+        )
+    assert forbidden.status_code == 403
+
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        allowed = client.post(
+            "/documents",
+            headers={"X-API-Key": "review-key"},
+            files={"file": ("multi.pdf", f, "application/pdf")},
+        )
+    assert allowed.status_code == 200
+    doc_id = allowed.json()["document_id"]
+    assert client.get(f"/documents/{doc_id}", headers={"X-API-Key": "view-key"}).status_code == 200

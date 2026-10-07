@@ -104,3 +104,7 @@ The live verifier includes an explicit startup-readiness gate. It polls `GET /he
 ## Database startup prerequisite
 
 The API assumes the database is already at the Alembic head revision. Deployment and verification must run `alembic upgrade head` before starting Uvicorn. This prevents hidden schema mutation during application import and makes database changes reviewable and reversible.
+
+## Authentication and RBAC
+
+Set `AUTH_MODE=enabled` and configure `FORM8825_API_KEYS` as comma-separated `key:role:subject` entries. Roles are hierarchical: `viewer` can read documents/audit history, `reviewer` can also upload and correct source values, and `admin` is reserved for full administrative access. Missing/invalid keys return HTTP 401; insufficient roles return HTTP 403. The local demo remains backward-compatible with `AUTH_MODE=disabled`. The React client can send a key through `VITE_API_KEY`.

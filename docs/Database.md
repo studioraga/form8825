@@ -84,3 +84,7 @@ The script verifies:
 ## Alembic migration contract
 
 Production/deployment schema changes are versioned under `migrations/versions/`. Initialize or upgrade a database with `alembic upgrade head`; inspect with `alembic current`; rollback testing may use `alembic downgrade`. Application startup does not call `create_all()`. Any later model change must include a forward/backward migration and migration-verification coverage.
+
+## Authentication storage boundary
+
+The current RBAC implementation intentionally reads API-key principals from environment configuration and does not store credentials in SQLite. This keeps the exercise dependency-light and avoids persisting secrets in the application database. A production identity provider would replace this adapter; financial document/audit tables remain independent of authentication credential storage.

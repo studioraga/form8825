@@ -161,3 +161,7 @@ The image-only OCR fixture is re-embedded with ReportLab invariant mode rather t
 ### P1.1 — Alembic migrations
 
 Schema evolution is now explicit and deployable. Application startup no longer creates tables implicitly; an initial Alembic revision reproduces the current model, and a dedicated verifier exercises upgrade/downgrade/upgrade on an isolated SQLite database.
+
+### P1.2 — Authentication and RBAC
+
+The API now distinguishes viewer, reviewer, and administrator capabilities with an `X-API-Key` dependency. Authorization is enforced server-side on read/upload/correction routes, with explicit 401/403 behavior and a verification test covering the role boundary.
