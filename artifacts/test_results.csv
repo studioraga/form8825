@@ -1,0 +1,7 @@
+run_at_utc,source_pdf_sha256,case,property,json_exact_match,arithmetic_valid,expected_total_income,actual_total_income,expected_total_expense,actual_total_expense,expected_net_income,actual_net_income,status,failure_reason
+2026-10-07T06:05:58.100852+00:00,b59c1b80b77bbd68a96a9ab3381bb6fd419c5b14703623b8db435e76fa0043ae,sample,A,True,True,1734896,1734896,1246695,1246695,488201,488201,PASS,
+2026-10-07T06:05:58.100852+00:00,b59c1b80b77bbd68a96a9ab3381bb6fd419c5b14703623b8db435e76fa0043ae,sample,GRAND_TOTAL,,,,,,,488201,488201,PASS,
+2026-10-07T06:05:58.100852+00:00,1894ece480aece2ace44f5c0f6a45b8aaffd080dca9bafd182b6564a941f1bb7,multi_ABC,A,True,True,125000,125000,89000,89000,36000,36000,PASS,
+2026-10-07T06:05:58.100852+00:00,1894ece480aece2ace44f5c0f6a45b8aaffd080dca9bafd182b6564a941f1bb7,multi_ABC,B,True,True,212500,212500,154200,154200,58300,58300,PASS,
+2026-10-07T06:05:58.100852+00:00,1894ece480aece2ace44f5c0f6a45b8aaffd080dca9bafd182b6564a941f1bb7,multi_ABC,C,True,True,182500,182500,122900,122900,59600,59600,PASS,
+2026-10-07T06:05:58.100852+00:00,1894ece480aece2ace44f5c0f6a45b8aaffd080dca9bafd182b6564a941f1bb7,multi_ABC,GRAND_TOTAL,,,,,,,153900,153900,PASS,

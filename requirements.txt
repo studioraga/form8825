@@ -1,0 +1,23 @@
+# Python 3.12+ baseline validated for the Form 8825 solution.
+# Install with: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+
+# PDF extraction and text-layer inspection
+pypdf==6.19.0
+pdfplumber==0.11.10
+
+# Synthetic multi-property PDF fixture generation
+reportlab==5.0.1
+
+# API and persistence
+fastapi==0.142.2
+uvicorn==0.54.0
+sqlalchemy==2.1.3
+python-multipart==0.0.32
+pydantic==2.13.5
+
+# Validation / API tests
+pytest==9.1.1
+httpx==0.28.1
+
+# Optional scanned-PDF implementation is deliberately not required for the baseline.
+# See requirements-ocr.txt and docs/PDF-Failure-Modes.md.

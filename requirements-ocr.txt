@@ -1,0 +1,4 @@
+# Optional scanned-PDF/OCR extension. Not required for the baseline tasks.
+-r requirements.txt
+pdf2image==1.17.0
+pytesseract==0.3.13

@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Editors
+*.swp
+*.swo
+*~
+
+# Runtime databases / evidence generated during tests
+form8825.db
+artifacts/*.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+
+# OS
+.DS_Store
+
+# Transient live API verification artifacts
+artifacts/verify_api_*.json
+artifacts/verify_api_*.log
