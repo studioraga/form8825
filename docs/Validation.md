@@ -498,3 +498,7 @@ Run `./scripts/verify_p1_03_concurrency.sh`. The test uploads a document, perfor
 ## P1.4 — Duplicate/reprocessing verification
 
 Run `./scripts/verify_p1_04_duplicates.sh`. The test uploads one fixture and verifies all three policies: `reuse` returns the original document ID, `reject` returns 409, and `reprocess` creates a new document linked to the first with generation 2.
+
+## P1.5 — Structured audit identity verification
+
+Run `./scripts/verify_p1_05_audit_identity.sh`. The test enables RBAC, authenticates a named reviewer, submits a correction with `X-Request-ID`, and requires the persisted audit row to contain the reviewer subject/role, correlation ID, and client IP.

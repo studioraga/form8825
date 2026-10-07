@@ -173,3 +173,7 @@ Property edits now carry a version token. The backend rejects stale reviewer wri
 ### P1.4 — Duplicate/reprocessing policy
 
 Uploads are now de-duplicated by SHA-256 under an explicit policy. The model can reuse prior work, reject duplicates, or create a traceable new processing generation, which is safer than silently creating indistinguishable duplicate rows.
+
+### P1.5 — Structured audit identity
+
+Audit rows now capture actor subject, actor role, request ID, and client IP alongside financial before/after values. This closes the gap between a technically auditable value change and an operationally attributable reviewer action.

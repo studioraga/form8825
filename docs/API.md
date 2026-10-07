@@ -116,3 +116,7 @@ Each property carries a monotonically increasing `version`. `PATCH /properties/{
 ## Duplicate and reprocessing policy
 
 `POST /documents` computes SHA-256 before extraction and applies `DUPLICATE_DOCUMENT_POLICY`: `reuse` returns the newest existing document for the hash, `reject` returns HTTP 409, and `reprocess` creates a new document linked to the previous record. Responses expose `duplicate_action` so callers can distinguish `created`, `reused`, and `reprocessed` outcomes.
+
+## Structured audit identity
+
+Every accepted manual correction records the authenticated subject and role, a request correlation ID, and the observed client IP in addition to old/new values and reason. Callers may supply `X-Request-ID`; otherwise the API generates one. Audit retrieval returns these identity fields so a correction can be traced back to an actor and request context.

@@ -4,9 +4,10 @@ import hashlib
 import os
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import SQLAlchemyError
@@ -159,7 +160,7 @@ class UpdateValue(BaseModel):
 
 
 @app.patch("/properties/{property_id}/value")
-def update_value(property_id: int, body: UpdateValue, s: Session = Depends(db), _principal: Principal = Depends(require_role("reviewer"))):
+def update_value(property_id: int, body: UpdateValue, request: Request, s: Session = Depends(db), principal: Principal = Depends(require_role("reviewer"))):
     prop = s.get(Property, property_id)
     if not prop:
         raise HTTPException(404, "Property not found")
@@ -193,6 +194,10 @@ def update_value(property_id: int, body: UpdateValue, s: Session = Depends(db), 
                 old_value=old,
                 new_value=body.value,
                 reason=body.reason,
+                actor_id=principal.subject,
+                actor_role=principal.role,
+                request_id=request.headers.get("X-Request-ID") or str(uuid.uuid4()),
+                client_ip=request.client.host if request.client else "unknown",
             )
         )
 
@@ -242,6 +247,10 @@ def audit(property_id: int, s: Session = Depends(db), _principal: Principal = De
             "old_value": row.old_value,
             "new_value": row.new_value,
             "reason": row.reason,
+            "actor_id": row.actor_id,
+            "actor_role": row.actor_role,
+            "request_id": row.request_id,
+            "client_ip": row.client_ip,
             "changed_at": row.changed_at,
         }
         for row in rows

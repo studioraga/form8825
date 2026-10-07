@@ -96,3 +96,7 @@ The current RBAC implementation intentionally reads API-key principals from envi
 ## Document reprocessing lineage
 
 Alembic revision `0003` adds `documents.reprocessed_from_id` and `processing_generation`. A reprocessed document points to the previous stored document with the same SHA-256 and increments its generation. SHA-256 remains indexed but is intentionally not unique because controlled reprocessing is allowed.
+
+## Audit identity fields
+
+Alembic revision `0004` adds `actor_id`, `actor_role`, `request_id`, and `client_ip` to `change_audit`. Together with property/category/key, old/new values, reason, and timestamp, the row now captures who changed what, why, and through which request context.

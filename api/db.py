@@ -83,6 +83,10 @@ class ChangeAudit(Base):
     old_value: Mapped[int] = mapped_column(Integer)
     new_value: Mapped[int] = mapped_column(Integer)
     reason: Mapped[str] = mapped_column(Text, default="manual UI edit")
+    actor_id: Mapped[str] = mapped_column(String(128), default="unknown", nullable=False)
+    actor_role: Mapped[str] = mapped_column(String(32), default="unknown", nullable=False)
+    request_id: Mapped[str] = mapped_column(String(128), default="unknown", nullable=False)
+    client_ip: Mapped[str] = mapped_column(String(64), default="unknown", nullable=False)
     changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     property = relationship("Property", back_populates="audits")

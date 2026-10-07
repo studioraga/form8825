@@ -115,3 +115,7 @@ Demonstrate one accepted correction followed by a stale retry. The second reques
 ### Enhancement: duplicate and reprocessing semantics
 
 Use SHA-256 lineage to explain idempotency versus intentional reruns. A repeated upload can reuse, reject, or create generation 2 linked to generation 1; the behavior is configuration, not an accidental side effect.
+
+### Enhancement: attributable corrections
+
+When showing the audit endpoint, point out that the record now answers who changed the value, which role authorized it, which request performed it, and where it originated—not only the numeric delta.

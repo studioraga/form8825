@@ -473,3 +473,7 @@ Manual review is no longer last-write-wins. Property state includes a version co
 ## 17. Duplicate/reprocessing control
 
 Document identity is SHA-256 based. Upload handling checks prior documents before extraction and applies an explicit policy: reuse prior results, reject the duplicate, or create a new processing generation linked to the prior document. This avoids accidental duplicate work while preserving a deliberate reprocessing path when software/profile versions change.
+
+## 18. Structured audit identity
+
+Financial corrections carry operational identity, not only before/after numbers. The authorization principal becomes `actor_id`/`actor_role`; request correlation becomes `request_id`; network origin becomes `client_ip`. This information is written in the same transaction as the manual value change and recalculated totals.

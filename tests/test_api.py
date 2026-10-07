@@ -237,3 +237,36 @@ def test_duplicate_document_policies(monkeypatch):
     stored = client.get(f"/documents/{body['document_id']}").json()
     assert stored["reprocessed_from_id"] == first["document_id"]
     assert stored["processing_generation"] == 2
+
+
+def test_audit_captures_actor_request_and_client_identity(monkeypatch):
+    monkeypatch.setenv("AUTH_MODE", "enabled")
+    monkeypatch.setenv("FORM8825_API_KEYS", "review-key:reviewer:reviewer-42")
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        upload = client.post(
+            "/documents",
+            headers={"X-API-Key": "review-key"},
+            files={"file": ("multi.pdf", f, "application/pdf")},
+        )
+    prop = upload.json()["properties"][0]
+    edit = client.patch(
+        f"/properties/{prop['id']}/value",
+        headers={"X-API-Key": "review-key", "X-Request-ID": "req-audit-001"},
+        json={
+            "category": "income_line_items",
+            "key": "gross_rents",
+            "value": 121000,
+            "expected_version": prop["version"],
+            "reason": "identity test",
+        },
+    )
+    assert edit.status_code == 200
+    rows = client.get(
+        f"/properties/{prop['id']}/audit",
+        headers={"X-API-Key": "review-key"},
+    ).json()
+    row = rows[-1]
+    assert row["actor_id"] == "reviewer-42"
+    assert row["actor_role"] == "reviewer"
+    assert row["request_id"] == "req-audit-001"
+    assert row["client_ip"]

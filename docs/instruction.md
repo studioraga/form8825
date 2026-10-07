@@ -205,3 +205,7 @@ Run `alembic upgrade head` to add `properties.version`. Clients must preserve th
 ## P1.4 deployment — duplicate policy
 
 Set `DUPLICATE_DOCUMENT_POLICY` to `reuse`, `reject`, or `reprocess`. The default is `reuse`. Use `reprocess` when intentionally rerunning the same bytes after parser/profile changes; use `reject` when duplicate submission should be a client-visible conflict. Run `alembic upgrade head` before enabling the feature.
+
+## P1.5 deployment — audit identity
+
+Run `alembic upgrade head` to add the audit identity columns. Upstream gateways should provide a stable authenticated subject and propagate a request/correlation ID. The application will generate a UUID when `X-Request-ID` is absent, but production observability is strongest when one ID flows end-to-end.
