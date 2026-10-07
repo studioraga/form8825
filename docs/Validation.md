@@ -482,3 +482,7 @@ Run `./scripts/verify_p0_02_flattened.sh`. It regenerates the flattened A/B/C fi
 Run `./scripts/verify_p0_03_ocr.sh` after installing `requirements-ocr.txt`, Tesseract, and Poppler. The script generates an image-only scanned fixture from the deterministic flattened PDF, proves that the text-layer probe sees no native text, runs the OCR path, and compares every income, expense, and total value against the A/B/C expected JSON.
 
 The scanned fixture generator also runs in ReportLab invariant mode after rasterization; the P0.3 verifier compares two generated SHA-256 values before OCR so the committed image-only evidence remains byte-reproducible.
+
+## P1.1 — Alembic migration verification
+
+Run `./scripts/verify_p1_01_migrations.sh`. It creates an isolated SQLite database, upgrades to head, checks the required tables plus `alembic_version`, downgrades to base, upgrades again, and prints the active revision. `verify_api_db.sh` also upgrades its isolated database before Uvicorn starts.

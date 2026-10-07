@@ -20,8 +20,6 @@ from .db import Base, ChangeAudit, Document, LineValue, Property, SessionLocal, 
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(20 * 1024 * 1024)))
 
-Base.metadata.create_all(engine)
-
 app = FastAPI(title="Form 8825 Extraction API", version="1.1.0")
 app.add_middleware(
     CORSMiddleware,

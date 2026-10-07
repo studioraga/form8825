@@ -100,3 +100,7 @@ Backend tests cover:
 `scripts/verify_api_db.sh` additionally exercises the live HTTP service with `curl` and verifies SQLite rows/provenance directly.
 
 The live verifier includes an explicit startup-readiness gate. It polls `GET /health` quietly while Uvicorn starts, requires a successful health response before continuing, and fails closed if readiness is not reached within the bounded polling window. On readiness failure it prints the captured Uvicorn log and exits nonzero rather than attempting document/API validation against an unavailable service.
+
+## Database startup prerequisite
+
+The API assumes the database is already at the Alembic head revision. Deployment and verification must run `alembic upgrade head` before starting Uvicorn. This prevents hidden schema mutation during application import and makes database changes reviewable and reversible.

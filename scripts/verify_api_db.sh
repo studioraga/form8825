@@ -19,6 +19,8 @@ rm -f "$DB" "$LOG" "$UPLOAD_JSON" "$PATCH_JSON" "$AUDIT_JSON"
 export DATABASE_URL="sqlite:///$DB"
 export MAX_UPLOAD_BYTES=$((20*1024*1024))
 
+.venv/bin/alembic upgrade head >/dev/null
+
 .venv/bin/python -m uvicorn api.main:app --host 127.0.0.1 --port 8000 >"$LOG" 2>&1 &
 API_PID=$!
 trap 'kill "$API_PID" 2>/dev/null || true' EXIT

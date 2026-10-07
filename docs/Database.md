@@ -80,3 +80,7 @@ The script verifies:
 - exactly three A/B/C properties;
 - one audit record after the scripted correction;
 - Property A net income stored as `37000` with source `calculated`.
+
+## Alembic migration contract
+
+Production/deployment schema changes are versioned under `migrations/versions/`. Initialize or upgrade a database with `alembic upgrade head`; inspect with `alembic current`; rollback testing may use `alembic downgrade`. Application startup does not call `create_all()`. Any later model change must include a forward/backward migration and migration-verification coverage.

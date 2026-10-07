@@ -99,3 +99,7 @@ Show `src/form8825/flattened.py` and explain that flattened documents are accept
 ### Enhancement: scanned-PDF OCR
 
 Demonstrate the distinction between native text and OCR: `usable_text_layer()` fails for the image-only fixture, `allow_ocr=True` activates Tesseract/Poppler, and the recovered financial values are still accepted only after the existing arithmetic invariants pass. Call out OCR confidence and address review as the next production control.
+
+### Enhancement: production schema evolution
+
+When discussing operational readiness, show the Alembic migration chain and explain why schema changes are no longer side effects of importing FastAPI. Deployment upgrades the database first, then starts the service; tests separately prove downgrade and re-upgrade behavior.

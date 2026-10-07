@@ -189,3 +189,7 @@ Calibrate a new flattened form by adding a versioned `FlatLayoutProfile` with me
 ## P0.3 validation — scanned input
 
 Install optional OCR dependencies with `pip install -r requirements-ocr.txt`; install system `tesseract` and Poppler (`pdftoppm`). Then run `./scripts/verify_p0_03_ocr.sh`. Keep OCR opt-in in production and add confidence/review policy before using OCR text as authoritative filing data.
+
+## P1.1 deployment — schema migrations
+
+After installing `requirements.txt`, run `alembic upgrade head` before starting the API. Do not restore application-level `Base.metadata.create_all()` for production startup. For every later model change, add an Alembic revision and rerun `./scripts/verify_p1_01_migrations.sh`.

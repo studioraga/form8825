@@ -157,3 +157,7 @@ The former flattened-PDF failure path now has a real profile-driven implementati
 The image-only path now renders PDFs with Poppler, recognizes tokens/confidence with Tesseract, maps recognized words into versioned coordinate cells, and sends the recovered numbers through the same canonical arithmetic checks. The regression fixture validates financial values exactly while documenting that OCR address text can require human review.
 
 The image-only OCR fixture is re-embedded with ReportLab invariant mode rather than PIL PDF output, eliminating timestamp metadata and making the scanned regression PDF byte-reproducible across runs.
+
+### P1.1 — Alembic migrations
+
+Schema evolution is now explicit and deployable. Application startup no longer creates tables implicitly; an initial Alembic revision reproduces the current model, and a dedicated verifier exercises upgrade/downgrade/upgrade on an isolated SQLite database.

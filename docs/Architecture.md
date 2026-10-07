@@ -457,3 +457,7 @@ Flattened PDFs with a supported layout profile are handled by `src/form8825/flat
 ## 13. Scanned-PDF OCR pipeline
 
 When no usable AcroForm or text layer exists and `allow_ocr=True`, the extractor renders the first page with Poppler (`pdf2image`), uses Tesseract to recognize words and confidence values, recognizes a supported OCR layout profile, maps token centers into the same versioned cell boxes used by flattened extraction, and then feeds the canonical schema/arithmetic validator. OCR remains opt-in because it has external system dependencies and recognition uncertainty.
+
+## 14. Schema migrations
+
+Database schema ownership has moved from application-startup `Base.metadata.create_all()` to Alembic. `alembic.ini`, `migrations/env.py`, and ordered revision files define the deployable schema contract. The API process no longer mutates schema on import; deployment/verification runs `alembic upgrade head` first. Tests may still use SQLAlchemy metadata for isolated ephemeral databases.
