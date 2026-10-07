@@ -119,3 +119,7 @@ Use SHA-256 lineage to explain idempotency versus intentional reruns. A repeated
 ### Enhancement: attributable corrections
 
 When showing the audit endpoint, point out that the record now answers who changed the value, which role authorized it, which request performed it, and where it originated—not only the numeric delta.
+
+### Enhancement: asynchronous processing
+
+Contrast `POST /documents` with `POST /jobs`: the former is convenient for the small exercise, while the latter returns 202 and exposes durable status. Explain that the job table/API is the stable contract and FastAPI BackgroundTasks is only the current executor.

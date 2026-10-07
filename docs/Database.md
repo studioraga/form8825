@@ -100,3 +100,7 @@ Alembic revision `0003` adds `documents.reprocessed_from_id` and `processing_gen
 ## Audit identity fields
 
 Alembic revision `0004` adds `actor_id`, `actor_role`, `request_id`, and `client_ip` to `change_audit`. Together with property/category/key, old/new values, reason, and timestamp, the row now captures who changed what, why, and through which request context.
+
+## Processing jobs
+
+Alembic revision `0005` adds `processing_jobs` with filename, SHA-256, status, resulting `document_id`, error text, and timestamps. Job records survive beyond the HTTP request and provide a durable status surface for asynchronous processing. The current implementation uses FastAPI background tasks; a production worker queue can replace the executor while preserving the table/API contract.

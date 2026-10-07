@@ -7,7 +7,7 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy.exc import SQLAlchemyError
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from form8825.extractor import ExtractionError, extract_8825  # noqa: E402
-from .db import Base, ChangeAudit, Document, LineValue, Property, SessionLocal, engine  # noqa: E402
+from .db import Base, ChangeAudit, Document, LineValue, ProcessingJob, Property, SessionLocal, engine  # noqa: E402
 from .auth import Principal, require_role  # noqa: E402
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(20 * 1024 * 1024)))
@@ -52,6 +52,75 @@ def serialize_property(p: Property) -> dict:
     for value in p.values:
         out[value.category][value.key] = value.value
     return out
+
+
+def _persist_result(s: Session, *, filename: str, sha256: str, result: list[dict], existing: Document | None, policy: str) -> Document:
+    doc = Document(
+        filename=filename,
+        sha256=sha256,
+        extraction_status="completed",
+        reprocessed_from_id=existing.id if existing and policy == "reprocess" else None,
+        processing_generation=(existing.processing_generation + 1) if existing and policy == "reprocess" else 1,
+    )
+    s.add(doc)
+    s.flush()
+    for item in result:
+        prop = Property(
+            document_id=doc.id,
+            property_name=item["property_name"],
+            property_address=item["property_address"],
+        )
+        s.add(prop)
+        s.flush()
+        for category in ("income_line_items", "expense_line_items", "totals"):
+            for key, value in item[category].items():
+                s.add(LineValue(property_id=prop.id, category=category, key=key, value=value, source="extracted"))
+    return doc
+
+
+def _background_process(job_id: int, filename: str, raw: bytes) -> None:
+    s = SessionLocal()
+    job = s.get(ProcessingJob, job_id)
+    if not job:
+        s.close()
+        return
+    try:
+        job.status = "running"
+        s.commit()
+        sha256 = hashlib.sha256(raw).hexdigest()
+        policy = os.getenv("DUPLICATE_DOCUMENT_POLICY", "reuse").lower()
+        existing = s.query(Document).filter_by(sha256=sha256).order_by(Document.id.desc()).first()
+        if existing and policy == "reuse":
+            job.document_id = existing.id
+            job.status = "completed"
+            s.commit()
+            return
+        if existing and policy == "reject":
+            raise RuntimeError(f"Duplicate document SHA-256 already stored as document {existing.id}")
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp.write(raw)
+            path = tmp.name
+        try:
+            result = extract_8825(path)
+        finally:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+        doc = _persist_result(s, filename=filename, sha256=sha256, result=result, existing=existing, policy=policy)
+        job.document_id = doc.id
+        job.status = "completed"
+        job.error = None
+        s.commit()
+    except Exception as exc:
+        s.rollback()
+        job = s.get(ProcessingJob, job_id)
+        if job:
+            job.status = "failed"
+            job.error = str(exc)[:2000]
+            s.commit()
+    finally:
+        s.close()
 
 
 @app.get("/health")
@@ -96,36 +165,9 @@ async def upload_document(file: UploadFile = File(...), s: Session = Depends(db)
             pass
 
     try:
-        doc = Document(
-            filename=file.filename or "upload.pdf",
-            sha256=sha256,
-            extraction_status="completed",
-            reprocessed_from_id=existing.id if existing and policy == "reprocess" else None,
-            processing_generation=(existing.processing_generation + 1) if existing and policy == "reprocess" else 1,
+        doc = _persist_result(
+            s, filename=file.filename or "upload.pdf", sha256=sha256, result=result, existing=existing, policy=policy
         )
-        s.add(doc)
-        s.flush()
-
-        for item in result:
-            prop = Property(
-                document_id=doc.id,
-                property_name=item["property_name"],
-                property_address=item["property_address"],
-            )
-            s.add(prop)
-            s.flush()
-            for category in ("income_line_items", "expense_line_items", "totals"):
-                for key, value in item[category].items():
-                    s.add(
-                        LineValue(
-                            property_id=prop.id,
-                            category=category,
-                            key=key,
-                            value=value,
-                            source="extracted",
-                        )
-                    )
-
         s.commit()
         s.refresh(doc)
     except SQLAlchemyError as exc:
@@ -133,6 +175,42 @@ async def upload_document(file: UploadFile = File(...), s: Session = Depends(db)
         raise HTTPException(500, "Database persistence failed") from exc
 
     return {"document_id": doc.id, "duplicate_action": "reprocessed" if doc.reprocessed_from_id else "created", "properties": [serialize_property(p) for p in doc.properties]}
+
+
+@app.post("/jobs", status_code=202)
+async def create_job(background_tasks: BackgroundTasks, file: UploadFile = File(...), s: Session = Depends(db), _principal: Principal = Depends(require_role("reviewer"))):
+    raw = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(raw) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"PDF exceeds {MAX_UPLOAD_BYTES} byte upload limit")
+    if not raw.startswith(b"%PDF-"):
+        raise HTTPException(400, "File is not a PDF")
+    job = ProcessingJob(
+        filename=file.filename or "upload.pdf",
+        sha256=hashlib.sha256(raw).hexdigest(),
+        status="queued",
+    )
+    s.add(job)
+    s.commit()
+    s.refresh(job)
+    background_tasks.add_task(_background_process, job.id, job.filename, raw)
+    return {"job_id": job.id, "status": job.status}
+
+
+@app.get("/jobs/{job_id}")
+def get_job(job_id: int, s: Session = Depends(db), _principal: Principal = Depends(require_role("viewer"))):
+    job = s.get(ProcessingJob, job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    return {
+        "job_id": job.id,
+        "filename": job.filename,
+        "sha256": job.sha256,
+        "status": job.status,
+        "document_id": job.document_id,
+        "error": job.error,
+        "created_at": job.created_at,
+        "updated_at": job.updated_at,
+    }
 
 
 @app.get("/documents/{document_id}")

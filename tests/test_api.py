@@ -270,3 +270,16 @@ def test_audit_captures_actor_request_and_client_identity(monkeypatch):
     assert row["actor_role"] == "reviewer"
     assert row["request_id"] == "req-audit-001"
     assert row["client_ip"]
+
+
+def test_background_job_processes_document():
+    with open(ROOT / "data/f8825_multi_ABC.pdf", "rb") as f:
+        response = client.post("/jobs", files={"file": ("multi.pdf", f, "application/pdf")})
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    job = client.get(f"/jobs/{job_id}")
+    assert job.status_code == 200
+    body = job.json()
+    assert body["status"] == "completed"
+    assert body["document_id"] is not None
+    assert client.get(f"/documents/{body['document_id']}").status_code == 200

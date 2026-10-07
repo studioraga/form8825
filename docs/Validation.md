@@ -502,3 +502,7 @@ Run `./scripts/verify_p1_04_duplicates.sh`. The test uploads one fixture and ver
 ## P1.5 — Structured audit identity verification
 
 Run `./scripts/verify_p1_05_audit_identity.sh`. The test enables RBAC, authenticates a named reviewer, submits a correction with `X-Request-ID`, and requires the persisted audit row to contain the reviewer subject/role, correlation ID, and client IP.
+
+## P2.1 — Background processing verification
+
+Run `./scripts/verify_p2_01_background_jobs.sh`. The test submits the deterministic A/B/C fixture to `POST /jobs`, requires HTTP 202, polls the job record, verifies it reaches `completed` with a document ID, and then retrieves the persisted document.

@@ -120,3 +120,7 @@ Each property carries a monotonically increasing `version`. `PATCH /properties/{
 ## Structured audit identity
 
 Every accepted manual correction records the authenticated subject and role, a request correlation ID, and the observed client IP in addition to old/new values and reason. Callers may supply `X-Request-ID`; otherwise the API generates one. Audit retrieval returns these identity fields so a correction can be traced back to an actor and request context.
+
+## Background processing API
+
+`POST /jobs` accepts the same PDF upload but returns HTTP 202 with a job ID. The FastAPI background worker updates `processing_jobs` through `queued`, `running`, `completed`, or `failed`, and stores the resulting `document_id` or error text. `GET /jobs/{job_id}` exposes job state. The synchronous `POST /documents` path remains available for small/demo documents.

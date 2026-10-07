@@ -477,3 +477,7 @@ Document identity is SHA-256 based. Upload handling checks prior documents befor
 ## 18. Structured audit identity
 
 Financial corrections carry operational identity, not only before/after numbers. The authorization principal becomes `actor_id`/`actor_role`; request correlation becomes `request_id`; network origin becomes `client_ip`. This information is written in the same transaction as the manual value change and recalculated totals.
+
+## 19. Background document processing
+
+Large/OCR workloads can use an asynchronous job boundary. `POST /jobs` persists a durable job record before scheduling extraction, while the worker opens its own database session and writes completion/failure state. This separates request latency from document-processing latency and provides a polling contract without changing the canonical extraction/persistence code.

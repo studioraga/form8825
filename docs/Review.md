@@ -177,3 +177,7 @@ Uploads are now de-duplicated by SHA-256 under an explicit policy. The model can
 ### P1.5 — Structured audit identity
 
 Audit rows now capture actor subject, actor role, request ID, and client IP alongside financial before/after values. This closes the gap between a technically auditable value change and an operationally attributable reviewer action.
+
+### P2.1 — Background processing
+
+A durable processing-job model and 202/polling API were added. Document extraction can now execute outside the request-response critical path while preserving status, result linkage, and failure text. The worker implementation remains intentionally replaceable by a production queue.

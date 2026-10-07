@@ -209,3 +209,7 @@ Set `DUPLICATE_DOCUMENT_POLICY` to `reuse`, `reject`, or `reprocess`. The defaul
 ## P1.5 deployment — audit identity
 
 Run `alembic upgrade head` to add the audit identity columns. Upstream gateways should provide a stable authenticated subject and propagate a request/correlation ID. The application will generate a UUID when `X-Request-ID` is absent, but production observability is strongest when one ID flows end-to-end.
+
+## P2.1 deployment — background jobs
+
+Run `alembic upgrade head` to create `processing_jobs`. Use `POST /jobs` for workloads that should not block an HTTP request. The built-in FastAPI background runner is appropriate for the single-process demonstration; production deployment should move execution to a durable worker/queue while keeping the same job state model.
