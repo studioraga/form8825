@@ -123,3 +123,7 @@ When showing the audit endpoint, point out that the record now answers who chang
 ### Enhancement: asynchronous processing
 
 Contrast `POST /documents` with `POST /jobs`: the former is convenient for the small exercise, while the latter returns 202 and exposes durable status. Explain that the job table/API is the stable contract and FastAPI BackgroundTasks is only the current executor.
+
+### Enhancement: observability and correlation
+
+Show one request carrying `X-Request-ID`, then the response header, structured request log, metrics counter, and audit `request_id`. This demonstrates one correlation key across operations and financial evidence.

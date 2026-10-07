@@ -181,3 +181,7 @@ Audit rows now capture actor subject, actor role, request ID, and client IP alon
 ### P2.1 — Background processing
 
 A durable processing-job model and 202/polling API were added. Document extraction can now execute outside the request-response critical path while preserving status, result linkage, and failure text. The worker implementation remains intentionally replaceable by a production queue.
+
+### P2.2 — Observability
+
+Request correlation, structured JSON access logging, latency/status counters, and a Prometheus-compatible metrics endpoint were added. Audit rows reuse the same request ID, linking operational telemetry with durable reviewer actions.

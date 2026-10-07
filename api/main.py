@@ -19,10 +19,12 @@ sys.path.insert(0, str(ROOT / "src"))
 from form8825.extractor import ExtractionError, extract_8825  # noqa: E402
 from .db import Base, ChangeAudit, Document, LineValue, ProcessingJob, Property, SessionLocal, engine  # noqa: E402
 from .auth import Principal, require_role  # noqa: E402
+from .observability import metrics_response, observability_middleware  # noqa: E402
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(20 * 1024 * 1024)))
 
 app = FastAPI(title="Form 8825 Extraction API", version="1.1.0")
+app.middleware("http")(observability_middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -126,6 +128,11 @@ def _background_process(job_id: int, filename: str, raw: bytes) -> None:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics():
+    return metrics_response()
 
 
 @app.post("/documents")
@@ -274,7 +281,7 @@ def update_value(property_id: int, body: UpdateValue, request: Request, s: Sessi
                 reason=body.reason,
                 actor_id=principal.subject,
                 actor_role=principal.role,
-                request_id=request.headers.get("X-Request-ID") or str(uuid.uuid4()),
+                request_id=getattr(request.state, "request_id", None) or request.headers.get("X-Request-ID") or str(uuid.uuid4()),
                 client_ip=request.client.host if request.client else "unknown",
             )
         )

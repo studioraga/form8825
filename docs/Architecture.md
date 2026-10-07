@@ -481,3 +481,7 @@ Financial corrections carry operational identity, not only before/after numbers.
 ## 19. Background document processing
 
 Large/OCR workloads can use an asynchronous job boundary. `POST /jobs` persists a durable job record before scheduling extraction, while the worker opens its own database session and writes completion/failure state. This separates request latency from document-processing latency and provides a polling contract without changing the canonical extraction/persistence code.
+
+## 20. Observability
+
+The API now has a request-correlation layer shared by application logs and financial audit records. Middleware generates/propagates `X-Request-ID`, measures request latency, records status counters, emits structured JSON logs, and exposes a lightweight Prometheus-compatible metrics surface. This provides a consistent trace key from HTTP activity to manual financial changes.

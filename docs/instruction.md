@@ -213,3 +213,7 @@ Run `alembic upgrade head` to add the audit identity columns. Upstream gateways 
 ## P2.1 deployment — background jobs
 
 Run `alembic upgrade head` to create `processing_jobs`. Use `POST /jobs` for workloads that should not block an HTTP request. The built-in FastAPI background runner is appropriate for the single-process demonstration; production deployment should move execution to a durable worker/queue while keeping the same job state model.
+
+## P2.2 deployment — observability
+
+Configure the process logger to retain the `form8825.api` JSON records and scrape `/metrics` from a trusted monitoring network. Propagate `X-Request-ID` from the ingress proxy when available. Do not expose the metrics endpoint to untrusted public networks without gateway controls.

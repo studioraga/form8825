@@ -283,3 +283,14 @@ def test_background_job_processes_document():
     assert body["status"] == "completed"
     assert body["document_id"] is not None
     assert client.get(f"/documents/{body['document_id']}").status_code == 200
+
+
+def test_observability_request_id_and_metrics():
+    response = client.get("/health", headers={"X-Request-ID": "req-observe-001"})
+    assert response.status_code == 200
+    assert response.headers["X-Request-ID"] == "req-observe-001"
+    metrics = client.get("/metrics")
+    assert metrics.status_code == 200
+    assert "form8825_http_requests_total" in metrics.text
+    assert 'path="/health"' in metrics.text
+    assert "form8825_http_responses_total" in metrics.text

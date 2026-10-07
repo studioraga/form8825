@@ -104,3 +104,7 @@ Alembic revision `0004` adds `actor_id`, `actor_role`, `request_id`, and `client
 ## Processing jobs
 
 Alembic revision `0005` adds `processing_jobs` with filename, SHA-256, status, resulting `document_id`, error text, and timestamps. Job records survive beyond the HTTP request and provide a durable status surface for asynchronous processing. The current implementation uses FastAPI background tasks; a production worker queue can replace the executor while preserving the table/API contract.
+
+## Observability and persistence correlation
+
+No new observability table is required for the baseline. Request correlation is carried in `change_audit.request_id`, while runtime counters/logs remain operational telemetry rather than business records. This avoids mixing short-lived metrics with durable financial audit data.

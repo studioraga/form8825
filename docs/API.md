@@ -124,3 +124,7 @@ Every accepted manual correction records the authenticated subject and role, a r
 ## Background processing API
 
 `POST /jobs` accepts the same PDF upload but returns HTTP 202 with a job ID. The FastAPI background worker updates `processing_jobs` through `queued`, `running`, `completed`, or `failed`, and stores the resulting `document_id` or error text. `GET /jobs/{job_id}` exposes job state. The synchronous `POST /documents` path remains available for small/demo documents.
+
+## Observability
+
+All HTTP requests pass through correlation/metrics middleware. `X-Request-ID` is preserved when supplied or generated when absent, returned on the response, and reused by audit logging. Structured JSON request logs include request ID, method, path, status, and duration. `GET /metrics` exposes Prometheus-compatible counters for request volume, response status, and cumulative latency; production deployments should restrict the metrics endpoint at the network/proxy layer.

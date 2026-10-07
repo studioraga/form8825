@@ -506,3 +506,7 @@ Run `./scripts/verify_p1_05_audit_identity.sh`. The test enables RBAC, authentic
 ## P2.1 — Background processing verification
 
 Run `./scripts/verify_p2_01_background_jobs.sh`. The test submits the deterministic A/B/C fixture to `POST /jobs`, requires HTTP 202, polls the job record, verifies it reaches `completed` with a document ID, and then retrieves the persisted document.
+
+## P2.2 — Observability verification
+
+Run `./scripts/verify_p2_02_observability.sh`. The test submits a known `X-Request-ID`, requires the same ID in the response, then checks `/metrics` for request and status counters including the `/health` path.
