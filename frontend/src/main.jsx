@@ -97,7 +97,7 @@ function App() {
         await fetch(`${API}/properties/${property.id}/value`, {
           method: 'PATCH',
           headers: {'Content-Type': 'application/json', ...authHeaders()},
-          body: JSON.stringify({category, key, value, reason: 'manual UI edit'}),
+          body: JSON.stringify({category, key, value, expected_version: property.version, reason: 'manual UI edit'}),
         }),
       );
       setDoc((current) => ({

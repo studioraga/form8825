@@ -43,6 +43,7 @@ def serialize_property(p: Property) -> dict:
         "id": p.id,
         "property_name": p.property_name,
         "property_address": p.property_address,
+        "version": p.version,
         "income_line_items": {},
         "expense_line_items": {},
         "totals": {},
@@ -135,6 +136,7 @@ class UpdateValue(BaseModel):
     category: str
     key: str
     value: int
+    expected_version: int = Field(ge=1)
     reason: str = Field(default="manual UI edit", min_length=1, max_length=500)
 
 
@@ -143,6 +145,9 @@ def update_value(property_id: int, body: UpdateValue, s: Session = Depends(db), 
     prop = s.get(Property, property_id)
     if not prop:
         raise HTTPException(404, "Property not found")
+
+    if body.expected_version != prop.version:
+        raise HTTPException(409, f"Stale property version: expected {body.expected_version}, current {prop.version}")
 
     if body.category not in {"income_line_items", "expense_line_items"}:
         raise HTTPException(
@@ -191,6 +196,7 @@ def update_value(property_id: int, body: UpdateValue, s: Session = Depends(db), 
             total_value.value = recalculated
             total_value.source = "calculated"
 
+        prop.version += 1
         s.commit()
         s.refresh(prop)
     except SQLAlchemyError as exc:

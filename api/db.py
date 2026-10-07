@@ -48,6 +48,7 @@ class Property(Base):
     document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), index=True)
     property_name: Mapped[str] = mapped_column(String(8))
     property_address: Mapped[str] = mapped_column(String(512), default="")
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
     document = relationship("Document", back_populates="properties")
     values = relationship("LineValue", back_populates="property", cascade="all, delete-orphan")

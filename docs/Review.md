@@ -165,3 +165,7 @@ Schema evolution is now explicit and deployable. Application startup no longer c
 ### P1.2 — Authentication and RBAC
 
 The API now distinguishes viewer, reviewer, and administrator capabilities with an `X-API-Key` dependency. Authorization is enforced server-side on read/upload/correction routes, with explicit 401/403 behavior and a verification test covering the role boundary.
+
+### P1.3 — Optimistic concurrency
+
+Property edits now carry a version token. The backend rejects stale reviewer writes with 409 and only increments the version after a committed update, preventing silent last-write-wins behavior.

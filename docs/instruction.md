@@ -197,3 +197,7 @@ After installing `requirements.txt`, run `alembic upgrade head` before starting 
 ## P1.2 deployment — authentication and RBAC
 
 For secured execution set `AUTH_MODE=enabled` and define `FORM8825_API_KEYS`, for example `view-key:viewer:alice,review-key:reviewer:bob`. Configure the React client with `VITE_API_KEY` only for a controlled demo; do not embed long-lived production secrets in a browser build. Run `./scripts/verify_p1_02_auth_rbac.sh` before enabling auth in deployment.
+
+## P1.3 deployment — optimistic concurrency
+
+Run `alembic upgrade head` to add `properties.version`. Clients must preserve the version returned by document/property responses and submit it as `expected_version` on PATCH. Handle HTTP 409 by reloading the current property state before retrying.

@@ -107,3 +107,7 @@ When discussing operational readiness, show the Alembic migration chain and expl
 ### Enhancement: authentication and role separation
 
 Show that React is not the security boundary. FastAPI enforces viewer versus reviewer permissions even for direct callers. Mention that the environment-backed API-key adapter is intentionally replaceable by enterprise OIDC/JWT without changing the financial data model.
+
+### Enhancement: concurrent reviewer safety
+
+Demonstrate one accepted correction followed by a stale retry. The second request is rejected with 409, showing that concurrent review conflicts are surfaced instead of silently losing another user's change.

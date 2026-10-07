@@ -47,13 +47,13 @@ echo "=== Upload A/B/C ==="
 curl -fsS -F 'file=@data/f8825_multi_ABC.pdf;type=application/pdf' http://127.0.0.1:8000/documents > "$UPLOAD_JSON"
 .venv/bin/python -m json.tool "$UPLOAD_JSON"
 
-read -r DOC_ID PROP_A <<<"$(.venv/bin/python - <<'PY'
+read -r DOC_ID PROP_A PROP_VERSION <<<"$(.venv/bin/python - <<'PY'
 import json
 x=json.load(open('artifacts/verify_api_upload.json'))
 assert [p['property_name'] for p in x['properties']] == ['A','B','C']
 a=x['properties'][0]
 assert a['totals'] == {'total_rental_income':125000,'total_expenses':89000,'net_income':36000}
-print(x['document_id'], a['id'])
+print(x['document_id'], a['id'], a['version'])
 PY
 )"
 
@@ -63,7 +63,7 @@ curl -fsS "http://127.0.0.1:8000/documents/$DOC_ID" | .venv/bin/python -m json.t
 echo "=== PATCH A gross rents 120000 -> 121000 ==="
 curl -fsS -X PATCH "http://127.0.0.1:8000/properties/$PROP_A/value" \
   -H 'Content-Type: application/json' \
-  -d '{"category":"income_line_items","key":"gross_rents","value":121000,"reason":"verification script"}' > "$PATCH_JSON"
+  -d "{\"category\":\"income_line_items\",\"key\":\"gross_rents\",\"value\":121000,\"expected_version\":$PROP_VERSION,\"reason\":\"verification script\"}" > "$PATCH_JSON"
 .venv/bin/python - <<'PY'
 import json
 x=json.load(open('artifacts/verify_api_patch.json'))
@@ -101,7 +101,7 @@ PY
 
 echo "=== Negative API controls ==="
 STATUS=$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "http://127.0.0.1:8000/properties/$PROP_A/value" \
-  -H 'Content-Type: application/json' -d '{"category":"totals","key":"net_income","value":999999}')
+  -H 'Content-Type: application/json' -d "{\"category\":\"totals\",\"key\":\"net_income\",\"value\":999999,\"expected_version\":2}")
 [[ "$STATUS" == "400" ]] || { echo "FAIL: expected 400 editing totals, got $STATUS"; exit 1; }
 STATUS=$(curl -sS -o /dev/null -w '%{http_code}' -F 'file=@requirements.txt;type=application/pdf' http://127.0.0.1:8000/documents)
 [[ "$STATUS" == "400" ]] || { echo "FAIL: expected 400 non-PDF, got $STATUS"; exit 1; }

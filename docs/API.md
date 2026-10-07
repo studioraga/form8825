@@ -108,3 +108,7 @@ The API assumes the database is already at the Alembic head revision. Deployment
 ## Authentication and RBAC
 
 Set `AUTH_MODE=enabled` and configure `FORM8825_API_KEYS` as comma-separated `key:role:subject` entries. Roles are hierarchical: `viewer` can read documents/audit history, `reviewer` can also upload and correct source values, and `admin` is reserved for full administrative access. Missing/invalid keys return HTTP 401; insufficient roles return HTTP 403. The local demo remains backward-compatible with `AUTH_MODE=disabled`. The React client can send a key through `VITE_API_KEY`.
+
+## Optimistic concurrency
+
+Each property carries a monotonically increasing `version`. `PATCH /properties/{property_id}/value` requires `expected_version`; stale edits receive HTTP 409 instead of silently overwriting a newer reviewer change. A successful edit increments the property version and returns the new version with the recalculated values.

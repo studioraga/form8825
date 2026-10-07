@@ -88,3 +88,7 @@ Production/deployment schema changes are versioned under `migrations/versions/`.
 ## Authentication storage boundary
 
 The current RBAC implementation intentionally reads API-key principals from environment configuration and does not store credentials in SQLite. This keeps the exercise dependency-light and avoids persisting secrets in the application database. A production identity provider would replace this adapter; financial document/audit tables remain independent of authentication credential storage.
+
+## Property versioning
+
+`properties.version` is an integer concurrency token introduced by Alembic revision `0002`. It starts at 1 and increments after each accepted source-value correction. API callers must submit the version they observed; stale versions are rejected before any line value or audit row is changed.

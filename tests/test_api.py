@@ -69,6 +69,7 @@ def test_income_edit_recalculates_and_is_audited():
             "category": "income_line_items",
             "key": "gross_rents",
             "value": old + 1000,
+            "expected_version": prop["version"],
             "reason": "test adjustment",
         },
     )
@@ -97,6 +98,7 @@ def test_expense_edit_recalculates_total_and_net():
             "category": "expense_line_items",
             "key": "repairs",
             "value": old_repairs + 500,
+            "expected_version": prop["version"],
             "reason": "repair correction",
         },
     )
@@ -111,7 +113,7 @@ def test_totals_cannot_be_manually_modified():
     prop = upload_multi()["properties"][0]
     response = client.patch(
         f"/properties/{prop['id']}/value",
-        json={"category": "totals", "key": "net_income", "value": 999999},
+        json={"category": "totals", "key": "net_income", "value": 999999, "expected_version": prop["version"]},
     )
     assert response.status_code == 400
 
@@ -121,14 +123,14 @@ def test_unknown_document_property_and_line_are_404():
     assert client.get("/properties/999999/audit").status_code == 404
     response = client.patch(
         "/properties/999999/value",
-        json={"category": "income_line_items", "key": "gross_rents", "value": 1},
+        json={"category": "income_line_items", "key": "gross_rents", "value": 1, "expected_version": 1},
     )
     assert response.status_code == 404
 
     prop = upload_multi()["properties"][0]
     response = client.patch(
         f"/properties/{prop['id']}/value",
-        json={"category": "income_line_items", "key": "not_a_line", "value": 1},
+        json={"category": "income_line_items", "key": "not_a_line", "value": 1, "expected_version": prop["version"]},
     )
     assert response.status_code == 404
 
@@ -183,3 +185,29 @@ def test_rbac_api_key_roles(monkeypatch):
     assert allowed.status_code == 200
     doc_id = allowed.json()["document_id"]
     assert client.get(f"/documents/{doc_id}", headers={"X-API-Key": "view-key"}).status_code == 200
+
+
+def test_optimistic_concurrency_rejects_stale_edit():
+    prop = upload_multi()["properties"][0]
+    first = client.patch(
+        f"/properties/{prop['id']}/value",
+        json={
+            "category": "income_line_items",
+            "key": "gross_rents",
+            "value": 121000,
+            "expected_version": prop["version"],
+        },
+    )
+    assert first.status_code == 200
+    assert first.json()["version"] == prop["version"] + 1
+
+    stale = client.patch(
+        f"/properties/{prop['id']}/value",
+        json={
+            "category": "income_line_items",
+            "key": "other_income",
+            "value": 6000,
+            "expected_version": prop["version"],
+        },
+    )
+    assert stale.status_code == 409

@@ -465,3 +465,7 @@ Database schema ownership has moved from application-startup `Base.metadata.crea
 ## 15. API authentication and RBAC
 
 The API boundary now has an explicit `X-API-Key` security dependency with hierarchical `viewer`, `reviewer`, and `admin` roles. Read operations require viewer access; document upload and financial corrections require reviewer access. Authentication can be disabled for the local demonstration, but production verification enables it explicitly. Authorization stays in FastAPI rather than React so direct API callers cannot bypass the policy.
+
+## 16. Optimistic concurrency
+
+Manual review is no longer last-write-wins. Property state includes a version counter shared by API and React. The browser submits the version it edited; FastAPI rejects stale updates with HTTP 409 and increments the version only after a successful correction/recalculation transaction. This makes concurrent reviewer conflicts explicit.

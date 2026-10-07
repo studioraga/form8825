@@ -490,3 +490,7 @@ Run `./scripts/verify_p1_01_migrations.sh`. It creates an isolated SQLite databa
 ## P1.2 — Authentication/RBAC verification
 
 Run `./scripts/verify_p1_02_auth_rbac.sh`. The test enables authentication, proves unauthenticated upload is 401, proves a viewer cannot upload (403), proves a reviewer can upload, and proves the viewer can subsequently read the persisted document.
+
+## P1.3 — Optimistic concurrency verification
+
+Run `./scripts/verify_p1_03_concurrency.sh`. The test uploads a document, performs one successful edit with the current version, confirms the version increments, then reuses the stale version for a second edit and requires HTTP 409.
